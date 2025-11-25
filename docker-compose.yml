@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-service
+      - order-service
+    networks:
+      - ecommerce-network
+
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "8001:8001"
+    networks:
+      - ecommerce-network
+
+  order-service:
+    build: ./order-service
+    ports:
+      - "8002:8002"
+    depends_on:
+      - rabbitmq
+    networks:
+      - ecommerce-network
+
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "8003:8003"
+    depends_on:
+      - rabbitmq
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    networks:
+      - ecommerce-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - ecommerce-network
+
+networks:
+  ecommerce-network:
+    driver: bridge
