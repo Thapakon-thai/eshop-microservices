@@ -1,51 +1,104 @@
-
+version: '3.8'
 
 services:
-  api-gateway:
-    build: ./api-gateway
-    ports:
-      - "8000:8000"
-    depends_on:
-      - auth-service
-      - order-service
-    networks:
-      - ecommerce-network
-
-  auth-service:
-    build: ./auth-service
-    ports:
-      - "8001:8001"
-    networks:
-      - ecommerce-network
-
-  order-service:
-    build: ./order-service
-    ports:
-      - "8002:8002"
-    depends_on:
-      - rabbitmq
-    networks:
-      - ecommerce-network
-
-  payment-service:
-    build: ./payment-service
-    ports:
-      - "8003:8003"
-    depends_on:
-      - rabbitmq
+  # -----------------------------------
+  # 1. Infrastructure (DB & Message Queue)
+  # -----------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: eshop_postgres
     environment:
-      - SPRING_RABBITMQ_HOST=rabbitmq
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      # ไม่ต้องระบุ POSTGRES_DB เพราะเราจะสร้างเอง 3 ก้อน
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # สั่งให้รัน script สร้าง 3 DB ตอนเริ่มทำงานครั้งแรก
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - ecommerce-network
+    healthcheck: # ตรวจสอบว่า DB พร้อมหรือยัง
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
+    container_name: eshop_rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
     networks:
       - ecommerce-network
 
+  # -----------------------------------
+  # 2. Application Services
+  # -----------------------------------
+  auth-service: # Python
+    build: ./auth-service
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy # รอจนกว่า DB จะ Health check ผ่าน
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://admin:password123@postgres:5432/auth_db
+    networks:
+      - ecommerce-network
+
+  order-service: # Go
+    build: ./order-service
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      - DB_DSN=host=postgres user=admin password=password123 dbname=order_db port=5432 sslmode=disable
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    networks:
+      - ecommerce-network
+
+  payment-service: # Java
+    build: ./payment-service
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/payment_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=password123
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    networks:
+      - ecommerce-network
+
+  api-gateway: # Node.js
+    build: ./api-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-service
+      - order-service
+      - payment-service
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - ORDER_SERVICE_URL=http://order-service:8002
+      - PAYMENT_SERVICE_URL=http://payment-service:8003
+    networks:
+      - ecommerce-network
+
 networks:
   ecommerce-network:
     driver: bridge
+
+volumes:
+  pgdata: # เก็บข้อมูลถาวร (ปิด container ข้อมูลไม่หาย)
