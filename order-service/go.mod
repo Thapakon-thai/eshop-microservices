@@ -1,10 +1,10 @@
 module order-service
 
-go 1.21
+go 1.22
 
 require (
 	github.com/gin-gonic/gin v1.9.1
-	github.com/streadway/amqp v1.1.0
+	github.com/rabbitmq/amqp091-go v1.9.0
 )
 
 require (

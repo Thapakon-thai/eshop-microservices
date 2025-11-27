@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Product struct {
@@ -17,8 +17,8 @@ type Product struct {
 }
 
 type Order struct {
-	ProductID string `json:"product_id"`
-	UserID    string `json:"user_id"`
+	ProductID string  `json:"product_id"`
+	UserID    string  `json:"user_id"`
 	Amount    float64 `json:"amount"`
 }
 
@@ -39,7 +39,7 @@ func main() {
 	// RabbitMQ connection
 	var conn *amqp.Connection
 	var err error
-	
+
 	for i := 0; i < 10; i++ {
 		conn, err = amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
 		if err == nil {
