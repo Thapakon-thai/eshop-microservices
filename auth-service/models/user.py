@@ -43,3 +43,4 @@ class RefreshToken(SQLModel, table=True):
     # Foreign key to User
     user_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, index=True)
     user: "User" = Relationship(back_populates="refresh_tokens")
+

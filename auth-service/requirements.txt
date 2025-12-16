@@ -1,4 +1,6 @@
-fastapi>=0.110.0
-uvicorn>=0.29.0
-python-jose[cryptography]>=3.3.0
+fastapi
+uvicorn
+pyjwt[crypto]
 sqlmodel
+pydantic-settings
+asyncpg
