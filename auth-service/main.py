@@ -2,9 +2,22 @@ from fastapi import FastAPI
 from api.v1.auth import router as auth_router
 import uvicorn
 
-app = FastAPI()
+from contextlib import asynccontextmanager
+from db.session import engine
+from sqlmodel import SQLModel
+# Import models so they are registered in SQLModel.metadata
+from models import user
 
-app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Tables to be created:", SQLModel.metadata.tables.keys())
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
 
 
 @app.get("/")

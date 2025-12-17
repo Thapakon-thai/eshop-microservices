@@ -11,7 +11,7 @@ async def test_register_login_flow(client: AsyncClient):
         "username": "testuser",
         "full_name": "Test User"
     }
-    response = await client.post("/api/v1/auth/register", json=user_data)
+    response = await client.post("/api/v1/register", json=user_data)
     assert response.status_code == 201
     data = response.json()
     assert data["email"] == user_data["email"]
@@ -22,7 +22,7 @@ async def test_register_login_flow(client: AsyncClient):
         "email": "test@example.com",
         "password": "strongpassword"
     }
-    response = await client.post("/api/v1/auth/login", json=login_data)
+    response = await client.post("/api/v1/login", json=login_data)
     # This is expected to fail with 500 if the bug exists
     assert response.status_code == 200
     token_data = response.json()
