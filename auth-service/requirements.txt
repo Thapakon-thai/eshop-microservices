@@ -4,3 +4,9 @@ pyjwt[crypto]
 sqlmodel
 pydantic-settings
 asyncpg
+passlib[argon2]
+pytest
+httpx
+aiosqlite
+pytest-asyncio
+greenlet

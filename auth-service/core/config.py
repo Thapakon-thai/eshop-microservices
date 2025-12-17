@@ -2,12 +2,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
 class Settings(BaseSettings):
-    PRIVATE_KEY_PATH: Path = Path("certs/private_key.pem")
-    PUBLIC_KEY_PATH: Path = Path("certs/public_key.pem")
+    PRIVATE_KEY_PATH: Path = Path("keys/private_key.pem")
+    PUBLIC_KEY_PATH: Path = Path("keys/public_key.pem")
 
     DATABASE_URL: str 
     ALGORITHM: str = "RS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
