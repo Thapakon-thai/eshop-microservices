@@ -6,7 +6,8 @@ engine = create_async_engine(settings.DATABASE_URL, echo=True, future=True)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine, 
-    expire_on_commit=False
+    expire_on_commit=False,
+    autoflush=False
 )
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

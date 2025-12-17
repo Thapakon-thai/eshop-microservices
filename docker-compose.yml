@@ -2,25 +2,23 @@ version: '3.8'
 
 services:
   # -----------------------------------
-  # 1. Infrastructure (DB & Message Queue)
+  # 1. Infrastructure
   # -----------------------------------
   postgres:
     image: postgres:15-alpine
     container_name: eshop_postgres
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password123
-      # ไม่ต้องระบุ POSTGRES_DB เพราะเราจะสร้างเอง 3 ก้อน
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      # สั่งให้รัน script สร้าง 3 DB ตอนเริ่มทำงานครั้งแรก
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - ecommerce-network
-    healthcheck: # ตรวจสอบว่า DB พร้อมหรือยัง
-      test: ["CMD-SHELL", "pg_isready -U admin"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"] # ใช้ตัวแปรได้แม้แต่ใน healthcheck
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,8 +27,11 @@ services:
     image: rabbitmq:3-management
     container_name: eshop_rabbitmq
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "15672:15672" # Management port มักไม่เปลี่ยน
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     networks:
       - ecommerce-network
 
@@ -40,59 +41,66 @@ services:
   auth-service: # Python
     build: ./auth-service
     ports:
-      - "8001:8001"
+      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     depends_on:
       postgres:
-        condition: service_healthy # รอจนกว่า DB จะ Health check ผ่าน
+        condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql+asyncpg://admin:password123@postgres:5432/auth_db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - AUTH_DB_NAME=${AUTH_DB_NAME}
     networks:
       - ecommerce-network
 
   order-service: # Go
     build: ./order-service
     ports:
-      - "8002:8002"
+      - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_started
     environment:
-      - DB_DSN=host=postgres user=admin password=password123 dbname=order_db port=5432 sslmode=disable
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - DB_DSN=host=${DB_HOST} user=${DB_USER} password=${DB_PASSWORD} dbname=${ORDER_DB_NAME} port=${DB_PORT} sslmode=disable
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/
     networks:
       - ecommerce-network
 
   payment-service: # Java
     build: ./payment-service
     ports:
-      - "8003:8003"
+      - "${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_started
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/payment_db
-      - SPRING_DATASOURCE_USERNAME=admin
-      - SPRING_DATASOURCE_PASSWORD=password123
-      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${PAYMENT_DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST}
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
     networks:
       - ecommerce-network
 
   api-gateway: # Node.js
     build: ./api-gateway
     ports:
-      - "8000:8000"
+      - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
     depends_on:
       - auth-service
       - order-service
       - payment-service
     environment:
-      - AUTH_SERVICE_URL=http://auth-service:8001
-      - ORDER_SERVICE_URL=http://order-service:8002
-      - PAYMENT_SERVICE_URL=http://payment-service:8003
+      # ใช้ชื่อ Service Name (auth-service) ในการคุยกันภายใน Docker Network เสมอ
+      - AUTH_SERVICE_URL=http://auth-service:${AUTH_SERVICE_PORT}
+      - ORDER_SERVICE_URL=http://order-service:${ORDER_SERVICE_PORT}
+      - PAYMENT_SERVICE_URL=http://payment-service:${PAYMENT_SERVICE_PORT}
     networks:
       - ecommerce-network
 
@@ -101,4 +109,4 @@ networks:
     driver: bridge
 
 volumes:
-  pgdata: # เก็บข้อมูลถาวร (ปิด container ข้อมูลไม่หาย)
+  pgdata:

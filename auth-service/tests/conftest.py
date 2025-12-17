@@ -29,6 +29,7 @@ async def prepare_database():
     yield
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
+    await engine.dispose()
 
 @pytest.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
