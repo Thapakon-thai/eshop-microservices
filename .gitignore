@@ -1,6 +1,31 @@
+# .gitignore (วางไว้ที่ root)
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
 .env
+
+# --- Go ---
+/order-service/order-service  # ชื่อ Binary output
+/order-service/bin/
+
+# --- Java (Maven) ---
+target/
+*.class
+
+# --- Node.js ---
+node_modules/
+npm-debug.log
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# --- Keys (สำคัญมาก ห้ามหลุด!) ---
 *.pem
+# ยกเว้น Public key ถ้าอยากให้ขึ้น git
 !public.pem
-__pycache__
-
-
