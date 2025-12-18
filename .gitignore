@@ -1,5 +1,3 @@
-# .gitignore (วางไว้ที่ root)
-
 # --- Python ---
 __pycache__/
 *.py[cod]
