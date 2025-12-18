@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import jwt
-from core.config import settings, PRIVATE_KEY
+from app.core.config import settings, PRIVATE_KEY
 import secrets
 from passlib.context import CryptContext
 

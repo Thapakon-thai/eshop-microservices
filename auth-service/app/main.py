@@ -1,12 +1,12 @@
 from fastapi import FastAPI
-from api.v1.auth import router as auth_router
+from app.api.v1.auth import router as auth_router
 import uvicorn
 
 from contextlib import asynccontextmanager
-from db.session import engine
+from app.db.session import engine
 from sqlmodel import SQLModel
 # Import models so they are registered in SQLModel.metadata
-from models import user
+from app.models import user
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
