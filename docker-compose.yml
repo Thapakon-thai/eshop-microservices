@@ -66,6 +66,7 @@ services:
     environment:
       - DB_DSN=host=${DB_HOST} user=${DB_USER} password=${DB_PASSWORD} dbname=${ORDER_DB_NAME} port=${DB_PORT} sslmode=disable
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/
+      - ORDER_SERVICE_PORT=${ORDER_SERVICE_PORT}
     networks:
       - ecommerce-network
 
