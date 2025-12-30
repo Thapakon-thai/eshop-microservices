@@ -13,6 +13,14 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, PRIVATE_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
+def verify_access_token(token: str) -> dict | None:
+    try:
+        from app.core.config import PUBLIC_KEY
+        payload = jwt.decode(token, PUBLIC_KEY, algorithm=settings.ALGORITHM)
+        return payload
+    except jwt.PyJWTError:
+        return None
+
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 

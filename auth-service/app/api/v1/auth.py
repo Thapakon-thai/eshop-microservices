@@ -12,8 +12,22 @@ from app.db.session import get_session
 from app.models.user import User, RefreshToken
 from app.core.config import settings
 
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/api/v1/login")
 
 router = APIRouter()
+
+@router.post("/verify")
+async def verify_token(token: str = Depends(oauth2_scheme)):
+    payload = security.verify_access_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return {"user_id": payload.get("sub")}
 
 @router.post("/login")
 async def login(data: LoginRequest, db: AsyncSession = Depends(get_session)):
