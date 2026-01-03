@@ -11,15 +11,16 @@ type OrderHandler struct {
 	service service.OrderService
 }
 
-func NewOrderService(svc service.OrderService) *OrderHandler {
+func NewOrderHandler(svc service.OrderService) *OrderHandler {
 	return &OrderHandler{service: svc}
 }
 
-func Route() chi.Router {
+func Route(handler *OrderHandler) chi.Router {
 	r := chi.NewRouter()
 
 	r.Get("/health", HealthCheck)
-
+	r.Post("/orders", handler.CreateOrder)
+	r.Get("/orders/{id}", handler.GetOrders)
 	return r
 }
 
@@ -29,7 +30,7 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
-
+	
 }
 
 func (h *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
