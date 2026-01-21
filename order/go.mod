@@ -1,4 +1,4 @@
-module github.com/thapakon-thai/eshop-microservices/order-service
+module github.com/thapakon-thai/eshop-microservices/order
 
 go 1.25.4
 

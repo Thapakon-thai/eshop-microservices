@@ -39,7 +39,7 @@ services:
   # 2. Application Services
   # -----------------------------------
   auth-service: # Python
-    build: ./auth-service
+    build: ./auth
     ports:
       - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     depends_on:
@@ -55,7 +55,7 @@ services:
       - ecommerce-network
 
   order-service: # Go
-    build: ./order-service
+    build: ./order
     ports:
       - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
     depends_on:
@@ -71,7 +71,7 @@ services:
       - ecommerce-network
 
   payment-service: # Java
-    build: ./payment-service
+    build: ./payment
     ports:
       - "${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}"
     depends_on:

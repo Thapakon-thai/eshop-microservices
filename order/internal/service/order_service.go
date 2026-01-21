@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/thapakon-thai/eshop-microservices/order-service/internal/models"
-	"github.com/thapakon-thai/eshop-microservices/order-service/internal/repository"
+	"github.com/thapakon-thai/eshop-microservices/order/internal/models"
+	"github.com/thapakon-thai/eshop-microservices/order/internal/repository"
 )
 
 type OrderService interface {

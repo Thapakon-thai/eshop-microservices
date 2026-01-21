@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"gorm.io/gorm"
-	"github.com/thapakon-thai/eshop-microservices/order-service/internal/models"
+	"github.com/thapakon-thai/eshop-microservices/order/internal/models"
 )
 
 type OrderRepo interface {

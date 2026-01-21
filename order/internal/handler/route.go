@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/thapakon-thai/eshop-microservices/order-service/internal/service"
+	"github.com/thapakon-thai/eshop-microservices/order/internal/service"
 )
 
 type OrderHandler struct {

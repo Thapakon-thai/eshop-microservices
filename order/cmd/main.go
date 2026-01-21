@@ -7,11 +7,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/thapakon-thai/eshop-microservices/order-service/internal/handler"
-	"github.com/thapakon-thai/eshop-microservices/order-service/internal/infrastructure/db"
-	"github.com/thapakon-thai/eshop-microservices/order-service/internal/models"
-	"github.com/thapakon-thai/eshop-microservices/order-service/internal/repository"
-	"github.com/thapakon-thai/eshop-microservices/order-service/internal/service"
+	"github.com/thapakon-thai/eshop-microservices/order/internal/handler"
+	"github.com/thapakon-thai/eshop-microservices/order/internal/infrastructure/db"
+	"github.com/thapakon-thai/eshop-microservices/order/internal/models"
+	"github.com/thapakon-thai/eshop-microservices/order/internal/repository"
+	"github.com/thapakon-thai/eshop-microservices/order/internal/service"
 )
 
 func main() {
