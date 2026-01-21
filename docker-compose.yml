@@ -90,7 +90,7 @@ services:
       - ecommerce-network
 
   api-gateway: # Node.js
-    build: ./api-gateway
+    build: ./gateway
     ports:
       - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
     depends_on:

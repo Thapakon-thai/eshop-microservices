@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package order;
+
+option go_package = "github.com/thapakon-thai/eshop-microservices/proto/order";
+
+service OrderService {
+  rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse);
+  rpc GetOrder (GetOrderRequest) returns (OrderResponse);
+}
+
+message OrderItem {
+  string product_id = 1;
+  int32 quantity = 2;
+  double price = 3;
+}
+
+message CreateOrderRequest {
+  string user_id = 1;
+  repeated OrderItem items = 2;
+}
+
+message CreateOrderResponse {
+  string order_id = 1;
+  string status = 2;
+}
+
+message GetOrderRequest {
+  string order_id = 1;
+}
+
+message OrderResponse {
+  string id = 1;
+  string user_id = 2;
+  string status = 3;
+  repeated OrderItem items = 4;
+  double total_amount = 5;
+  string created_at = 6;
+}
