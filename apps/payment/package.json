@@ -1,0 +1,8 @@
+{
+  "name": "payment-service",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "mvn clean package -DskipTests",
+    "dev": "set -a && . ./.env && set +a && mvn spring-boot:run"
+  }
+}

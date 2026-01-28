@@ -56,8 +56,8 @@ func main() {
 
 	r.Mount("/api/v1/", handler.Route(h))
 
-	slog.Info("Starting server at", "port", ":8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	slog.Info("Starting server at", "port", ":"+port)
+	if err := http.ListenAndServe(":"+port, r); err != nil {
 		slog.Error("Server failed", "error", err)
 		os.Exit(1)
 	}

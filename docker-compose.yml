@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # -----------------------------------
   # 1. Infrastructure
@@ -39,7 +37,7 @@ services:
   # 2. Application Services
   # -----------------------------------
   auth-service: # Python
-    build: ./auth
+    build: ./apps/auth
     ports:
       - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     depends_on:
@@ -55,7 +53,7 @@ services:
       - ecommerce-network
 
   order-service: # Go
-    build: ./order
+    build: ./apps/order
     ports:
       - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
     depends_on:
@@ -71,7 +69,7 @@ services:
       - ecommerce-network
 
   payment-service: # Java
-    build: ./payment
+    build: ./apps/payment
     ports:
       - "${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}"
     depends_on:
@@ -90,7 +88,7 @@ services:
       - ecommerce-network
 
   api-gateway: # Node.js
-    build: ./gateway
+    build: ./apps/gateway
     ports:
       - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
     depends_on:

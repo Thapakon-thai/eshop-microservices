@@ -1,0 +1,9 @@
+{
+  "name": "auth-service",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'Building auth service... (Python/docker build usually happens here or in CI)'",
+    "dev": "PYTHONPATH=. python3 app/main.py",
+    "lint": "pylint app/"
+  }
+}
