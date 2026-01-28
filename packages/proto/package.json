@@ -2,6 +2,6 @@
   "name": "proto",
   "version": "1.0.0",
   "scripts": {
-    "build": "echo 'Generating protos... (assumes protoc installed)' && protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative *.proto"
+    "build": "export PATH=$PATH:$(go env GOPATH)/bin && echo 'Generating protos... (assumes protoc installed)' && protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative *.proto"
   }
 }
