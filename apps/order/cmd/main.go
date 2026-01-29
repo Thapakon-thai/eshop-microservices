@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/handler"
+	"github.com/thapakon-thai/eshop-microservices/order/internal/infrastructure"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/infrastructure/db"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/models"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/repository"
@@ -43,8 +44,22 @@ func main() {
 	}
 
 	// Dependency Injection
+	productUrl := os.Getenv("PRODUCT_SERVICE_URL")
+	if productUrl == "" {
+		productUrl = "product-service:5004"
+	}
+	inventoryUrl := os.Getenv("INVENTORY_SERVICE_URL")
+	if inventoryUrl == "" {
+		inventoryUrl = "inventory-service:5005"
+	}
+
+	grpcClients := infrastructure.NewGrpcClients(productUrl, inventoryUrl)
+
+	publisher := infrastructure.NewEventPublisher(os.Getenv("RABBITMQ_URL"))
+	defer publisher.Close()
+
 	repo := repository.NewPostgresqlRepo(gormDB)
-	svc := service.NewOrderService(repo)
+	svc := service.NewOrderService(repo, grpcClients, publisher)
 	h := handler.NewOrderHandler(svc)
 
 	// Router

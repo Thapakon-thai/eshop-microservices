@@ -1,0 +1,8 @@
+go 1.25.4
+
+use (
+	./apps/order
+	./apps/product
+	./packages/proto
+	./apps/inventory
+)

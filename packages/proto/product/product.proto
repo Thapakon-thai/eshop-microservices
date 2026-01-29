@@ -7,6 +7,15 @@ option go_package = "github.com/thapakon-thai/eshop-microservices/proto/product"
 service ProductService {
   rpc GetProduct (GetProductRequest) returns (ProductResponse);
   rpc ListProducts (ListProductsRequest) returns (ListProductsResponse);
+  rpc CreateProduct (CreateProductRequest) returns (ProductResponse);
+}
+
+message CreateProductRequest {
+  string name = 1;
+  string description = 2;
+  double price = 3;
+  int32 stock = 4;
+  string category_id = 5;
 }
 
 message ProductResponse {

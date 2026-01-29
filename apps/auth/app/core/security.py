@@ -16,7 +16,7 @@ def create_access_token(data: dict):
 def verify_access_token(token: str) -> dict | None:
     try:
         from app.core.config import PUBLIC_KEY
-        payload = jwt.decode(token, PUBLIC_KEY, algorithm=settings.ALGORITHM)
+        payload = jwt.decode(token, PUBLIC_KEY, algorithms=[settings.ALGORITHM])
         return payload
     except jwt.PyJWTError:
         return None

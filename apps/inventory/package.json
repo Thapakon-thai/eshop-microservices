@@ -1,0 +1,8 @@
+{
+  "name": "inventory-service",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "go build -o bin/inventory ./cmd/main.go",
+    "dev": "set -a && . ./.env && set +a && go run ./cmd/main.go"
+  }
+}

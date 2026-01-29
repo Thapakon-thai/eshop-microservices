@@ -1,0 +1,8 @@
+{
+  "name": "product-service",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "go build -o bin/product ./cmd/main.go",
+    "dev": "set -a && . ./.env && set +a && go run ./cmd/main.go"
+  }
+}

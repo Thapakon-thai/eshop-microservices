@@ -7,7 +7,7 @@ const PORT = 8000;
 
 // Auth Service Proxy
 app.use('/auth', createProxyMiddleware({
-    target: 'http://auth-service:8001',
+    target: process.env.AUTH_SERVICE_URL || 'http://auth-service:5001',
     changeOrigin: true,
     pathRewrite: {
         '^/auth': '', // remove base path
@@ -29,9 +29,9 @@ const checkAuth = async (req, res, next) => {
     }
 
     try {
-        console.log(`Verifying token: ${token.substring(0, 10)} ... against http://auth-service:8001/api/v1/verify`)
+        console.log(`Verifying token: ${token.substring(0, 10)} ... against ${process.env.AUTH_SERVICE_URL || 'http://auth-service:5001'}/api/v1/verify`)
 
-        const response = await axios.get('http://auth-service:8001/api/v1/verify', {
+        const response = await axios.post(`${process.env.AUTH_SERVICE_URL || 'http://auth-service:5001'}/api/v1/verify`, {}, {
             headers: {authorization: `Bearer ${token}` }
         });
 
@@ -53,7 +53,7 @@ const checkAuth = async (req, res, next) => {
 
 // Order Service Proxy
 app.use('/order', checkAuth, createProxyMiddleware({
-    target: 'http://order-service:8002',
+    target: process.env.ORDER_SERVICE_URL || 'http://order-service:5002',
     changeOrigin: true,
     pathRewrite: {
         '^/order': '', // remove base path
@@ -80,6 +80,102 @@ app.use('/payment', checkAuth, createProxyMiddleware({
         }
     }
 }));
+
+/**
+ * GATEWAY ROUTES
+ */
+
+const PROTO_PATH_PRODUCT = __dirname + '/packages/proto/product/product.proto';
+const PROTO_PATH_INVENTORY = __dirname + '/packages/proto/inventory/inventory.proto';
+
+const grpc = require('@grpc/grpc-js');
+const protoLoader = require('@grpc/proto-loader');
+
+// Product Service Client
+const productPackageDefinition = protoLoader.loadSync(PROTO_PATH_PRODUCT, {
+    keepCase: true,
+    longs: String,
+    enums: String,
+    defaults: true,
+    oneofs: true
+});
+const productProto = grpc.loadPackageDefinition(productPackageDefinition).product;
+const productClient = new productProto.ProductService(
+    process.env.PRODUCT_SERVICE_URL || 'product-service:5004',
+    grpc.credentials.createInsecure()
+);
+
+// Inventory Service Client
+const inventoryPackageDefinition = protoLoader.loadSync(PROTO_PATH_INVENTORY, {
+    keepCase: true,
+    longs: String,
+    enums: String,
+    defaults: true,
+    oneofs: true
+});
+const inventoryProto = grpc.loadPackageDefinition(inventoryPackageDefinition).inventory;
+const inventoryClient = new inventoryProto.InventoryService(
+    process.env.INVENTORY_SERVICE_URL || 'inventory-service:5005',
+    grpc.credentials.createInsecure()
+);
+
+// --- Product Routes (REST -> gRPC) ---
+app.get('/products', (req, res) => {
+    productClient.ListProducts({ 
+        page: parseInt(req.query.page) || 1, 
+        limit: parseInt(req.query.limit) || 10 
+    }, (err, response) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(response);
+    });
+});
+
+app.get('/products/:id', (req, res) => {
+    productClient.GetProduct({ id: req.params.id }, (err, response) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(response);
+    });
+});
+
+app.post('/products', express.json(), (req, res) => {
+    productClient.CreateProduct(req.body, (err, response) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(response);
+    });
+});
+
+// --- Inventory Routes (REST -> gRPC) ---
+app.post('/inventory/stock', express.json(), (req, res) => {
+    inventoryClient.UpdateStock({ 
+        product_id: req.body.product_id,
+        quantity_change: req.body.quantity_change 
+    }, (err, response) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(response);
+    });
+});
+
+app.get('/inventory/:productId', (req, res) => {
+    inventoryClient.GetStock({ product_id: req.params.productId }, (err, response) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(response);
+    });
+});
+
+// --- Cart Service Proxy (HTTP) ---
+app.use('/cart', checkAuth, createProxyMiddleware({
+    target: process.env.CART_SERVICE_URL || 'http://cart-service:3001',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/cart': '', // remove base path
+    },
+    onProxyReq: (proxyReq, req, res) => {
+         if (req.headers['x-user-id']) {
+            proxyReq.setHeader('x-user-id', req.headers['x-user-id']);
+        }
+    }
+}));
+
 
 app.get('/', (req, res) => {
     res.send('API Gateway is running');

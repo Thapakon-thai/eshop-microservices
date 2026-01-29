@@ -33,9 +33,72 @@ services:
     networks:
       - ecommerce-network
 
+  mongo:
+    image: mongo:6-jammy
+    container_name: eshop_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - ecommerce-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: eshop_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - ecommerce-network
+
   # -----------------------------------
   # 2. Application Services
   # -----------------------------------
+  inventory-service: # Go
+    build:
+      context: .
+      dockerfile: ./apps/inventory/Dockerfile
+    ports:
+      - "${INVENTORY_SERVICE_PORT}:${INVENTORY_SERVICE_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_DSN=host=postgres user=${DB_USER} password=${DB_PASSWORD} dbname=inventory_db port=${DB_PORT} sslmode=disable
+      - INVENTORY_SERVICE_PORT=${INVENTORY_SERVICE_PORT}
+    networks:
+      - ecommerce-network
+
+  cart-service: # Node.js
+    build: ./apps/cart
+    ports:
+      - "${CART_SERVICE_PORT}:${CART_SERVICE_PORT}"
+    depends_on:
+      redis:
+        condition: service_started
+    environment:
+      - CART_SERVICE_PORT=${CART_SERVICE_PORT}
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - ecommerce-network
+
+  product-service: # Go
+    build:
+      context: .
+      dockerfile: ./apps/product/Dockerfile
+    ports:
+      - "${PRODUCT_SERVICE_PORT}:${PRODUCT_SERVICE_PORT}"
+    depends_on:
+      mongo:
+        condition: service_started
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017
+      - PRODUCT_SERVICE_PORT=${PRODUCT_SERVICE_PORT}
+    networks:
+      - ecommerce-network
+
   auth-service: # Python
     build: ./apps/auth
     ports:
@@ -53,7 +116,9 @@ services:
       - ecommerce-network
 
   order-service: # Go
-    build: ./apps/order
+    build:
+      context: .
+      dockerfile: ./apps/order/Dockerfile
     ports:
       - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
     depends_on:
@@ -88,7 +153,9 @@ services:
       - ecommerce-network
 
   api-gateway: # Node.js
-    build: ./apps/gateway
+    build:
+      context: .
+      dockerfile: ./apps/gateway/Dockerfile
     ports:
       - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
     depends_on:
@@ -103,9 +170,21 @@ services:
     networks:
       - ecommerce-network
 
+  notification-service: # Node.js
+    build: ./apps/notification
+    depends_on:
+      rabbitmq:
+        condition: service_started
+    environment:
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/
+    networks:
+      - ecommerce-network
+
 networks:
   ecommerce-network:
     driver: bridge
 
 volumes:
   pgdata:
+  mongodata:
+  redisdata:
