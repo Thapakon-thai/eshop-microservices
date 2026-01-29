@@ -135,7 +135,7 @@ const CartPage = () => {
                   {/* IMAGE */}
                   <div className="relative w-32 h-32 bg-gray-50 rounded-lg overflow-hidden">
                     <Image
-                      src={item.images[item.selectedColor]}
+                      src={item.images?.[item.selectedColor] || "/logo.png"}
                       alt={item.name}
                       fill
                       className="object-contain"
@@ -180,35 +180,37 @@ const CartPage = () => {
         {/* DETAILS */}
         <div className="w-full lg:w-5/12 shadow-lg border-1 border-gray-100 p-8 rounded-lg flex flex-col gap-8 h-max">
           <h2 className="font-semibold">Cart Details</h2>
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between text-sm">
-              <p className="text-gray-500">Subtotal</p>
-              <p className="font-medium">
-                $
-                {cart
-                  .reduce((acc, item) => acc + item.price * item.quantity, 0)
-                  .toFixed(2)}
-              </p>
+            {/* DETAILS */}
+            <div className="flex flex-col gap-4">
+              {(() => {
+                const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+                const discount = subtotal * 0.1; // 10% discount
+                const shippingFee = 10;
+                const total = subtotal - discount + shippingFee;
+
+                return (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <p className="text-gray-500">Subtotal</p>
+                      <p className="font-medium">${subtotal.toFixed(2)}</p>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <p className="text-gray-500">Discount(10%)</p>
+                      <p className="font-medium">-${discount.toFixed(2)}</p>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <p className="text-gray-500">Shipping Fee</p>
+                      <p className="font-medium">${shippingFee.toFixed(2)}</p>
+                    </div>
+                    <hr className="border-gray-200" />
+                    <div className="flex justify-between">
+                      <p className="text-gray-800 font-semibold">Total</p>
+                      <p className="font-medium">${total.toFixed(2)}</p>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
-            <div className="flex justify-between text-sm">
-              <p className="text-gray-500">Discount(10%)</p>
-              <p className="font-medium">$ 10</p>
-            </div>
-            <div className="flex justify-between text-sm">
-              <p className="text-gray-500">Shipping Fee</p>
-              <p className="font-medium">$10</p>
-            </div>
-            <hr className="border-gray-200" />
-            <div className="flex justify-between">
-              <p className="text-gray-800 font-semibold">Total</p>
-              <p className="font-medium">
-                $
-                {cart
-                  .reduce((acc, item) => acc + item.price * item.quantity, 0)
-                  .toFixed(2)}
-              </p>
-            </div>
-          </div>
           {activeStep === 1 && (
             <button
               onClick={() => router.push("/cart?step=2", { scroll: false })}

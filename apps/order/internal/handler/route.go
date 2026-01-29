@@ -22,6 +22,7 @@ func Route(handler *OrderHandler) chi.Router {
 
 	r.Get("/health", HealthCheck)
 	r.Post("/orders", handler.CreateOrder)
+	r.Get("/orders", handler.ListOrders)
 	r.Get("/orders/{id}", handler.GetOrders)
 	return r
 }
@@ -72,4 +73,15 @@ func (h *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(order)
+}
+
+func (h *OrderHandler) ListOrders(w http.ResponseWriter, r *http.Request) {
+	orders, err := h.service.ListOrders(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(orders)
 }

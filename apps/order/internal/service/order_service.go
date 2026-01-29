@@ -16,6 +16,7 @@ import (
 type OrderService interface {
 	CreateOrder(ctx context.Context, req *models.CreateOrderRequest) (*models.Order, error)
 	GetOrders(ctx context.Context, id string) (*models.Order, error)
+	ListOrders(ctx context.Context) ([]*models.Order, error)
 }
 
 type OrderServiceImpl struct {
@@ -109,4 +110,8 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 
 func (s *OrderServiceImpl) GetOrders(ctx context.Context, id string) (*models.Order, error) {
 	return s.repo.GetOrders(ctx, id)
+}
+
+func (s *OrderServiceImpl) ListOrders(ctx context.Context) ([]*models.Order, error) {
+	return s.repo.ListOrders(ctx)
 }

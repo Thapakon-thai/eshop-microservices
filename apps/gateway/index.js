@@ -73,7 +73,7 @@ app.use('/order', checkAuth, createProxyMiddleware({
 
 // Payment Service Proxy (Optional, usually internal but exposed for debug if needed)
 app.use('/payment', checkAuth, createProxyMiddleware({
-    target: 'http://payment-service:8003',
+    target: process.env.PAYMENT_SERVICE_URL || 'http://payment-service:5003',
     changeOrigin: true,
     pathRewrite: {
         '^/payment': '', // remove base path

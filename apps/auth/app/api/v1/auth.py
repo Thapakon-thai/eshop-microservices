@@ -71,7 +71,9 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_session)):
     return {
         "access_token": access_token,
         "refresh_token": refresh_token_str,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "role": user.role,
+        "full_name": user.full_name
     }
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
@@ -114,3 +116,10 @@ async def register(user_create: UserCreate, db: AsyncSession = Depends(get_sessi
     return new_user
 
 
+
+@router.get("/users", response_model=list[UserRead])
+async def read_users(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_session)):
+    statement = select(User).offset(skip).limit(limit)
+    result = await db.execute(statement)
+    users = result.scalars().all()
+    return users

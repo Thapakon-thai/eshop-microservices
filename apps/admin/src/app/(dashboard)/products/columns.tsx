@@ -10,17 +10,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+// import { cn } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 export type Product = {
-  id: string | number;
+  id: string;
   price: number;
   name: string;
-  shortDescription: string;
   description: string;
   sizes: string[];
   colors: string[];
@@ -51,10 +50,11 @@ export const columns: ColumnDef<Product>[] = [
     header: "Image",
     cell: ({ row }) => {
       const product = row.original;
+      const displayImage = product.images?.[product.colors?.[0]] || Object.values(product.images || {})[0] || "/logo.svg";
       return (
         <div className="w-9 h-9 relative">
           <Image
-            src={product.images[product.colors[0]]}
+            src={displayImage}
             alt={product.name}
             fill
             className="rounded-full object-cover"
@@ -82,8 +82,11 @@ export const columns: ColumnDef<Product>[] = [
     },
   },
   {
-    accessorKey: "shortDescription",
+    accessorKey: "description",
     header: "Description",
+    cell: ({ row }) => {
+       return <span className="truncate max-w-[200px] block" title={row.getValue("description")}>{row.getValue("description")}</span> // Truncate description
+    }
   },
   {
     id: "actions",
@@ -107,7 +110,7 @@ export const columns: ColumnDef<Product>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <Link href={`/products/${product.id}`}>View customer</Link>
+              <Link href={`/products/${product.id}`}>View Product</Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

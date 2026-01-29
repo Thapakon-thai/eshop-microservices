@@ -1,5 +1,5 @@
-import CardList from "@/components/CardList";
-import { Badge } from "@/components/ui/badge";
+// import CardList from "@/components/CardList";
+// import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import EditUser from "@/components/EditUser";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AppLineChart from "@/components/AppLineChart";
+
+export const dynamic = "force-dynamic";
 
 const SingleUserPage = () => {
   return (

@@ -11,6 +11,8 @@ class TokenResponse(SQLModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+    role: str
+    full_name: str | None = None
 
 class UserCreate(SQLModel):
     email: str

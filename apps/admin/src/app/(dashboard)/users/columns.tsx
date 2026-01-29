@@ -13,15 +13,14 @@ import {
 import { cn } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
+
 
 export type User = {
   id: string;
-  avatar: string;
-  fullName: string;
+  full_name: string;
   email: string;
-  status: "active" | "inactive";
+  role: string;
 };
 
 export const columns: ColumnDef<User>[] = [
@@ -44,25 +43,8 @@ export const columns: ColumnDef<User>[] = [
     ),
   },
   {
-    accessorKey: "avatar",
-    header: "Avatar",
-    cell: ({ row }) => {
-      const user = row.original;
-      return (
-        <div className="w-9 h-9 relative">
-          <Image
-            src={user.avatar}
-            alt={user.fullName}
-            fill
-            className="rounded-full object-cover"
-          />
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "fullName",
-    header: "User",
+    accessorKey: "full_name",
+    header: "Name",
   },
   {
     accessorKey: "email",
@@ -79,20 +61,19 @@ export const columns: ColumnDef<User>[] = [
     },
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "role",
+    header: "Role",
     cell: ({ row }) => {
-      const status = row.getValue("status");
-
+      const role = row.getValue("role") as string;
       return (
         <div
           className={cn(
-            `p-1 rounded-md w-max text-xs`,
-            status === "active" && "bg-green-500/40",
-            status === "inactive" && "bg-red-500/40"
+            `p-1 rounded-md w-max text-xs uppercase font-bold`,
+            role === "admin" && "bg-blue-100 text-blue-800",
+            role === "user" && "bg-gray-100 text-gray-800"
           )}
         >
-          {status as string}
+          {role}
         </div>
       );
     },
@@ -119,7 +100,7 @@ export const columns: ColumnDef<User>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <Link href={`/users/${user.id}`}>View customer</Link>
+              <Link href={`/users/${user.id}`}>View details</Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -127,3 +108,4 @@ export const columns: ColumnDef<User>[] = [
     },
   },
 ];
+
