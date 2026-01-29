@@ -1,22 +1,46 @@
 import { create } from 'zustand'
 import Cookies from 'js-cookie'
 
+interface User {
+  name: string
+  email: string
+}
+
 interface AuthState {
   isAuthenticated: boolean
+  user: User | null
   checkAuth: () => void
-  login: (token: string) => void
+  login: (token: string, user: User) => void
   logout: () => void
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: !!Cookies.get('token'),
-  checkAuth: () => set({ isAuthenticated: !!Cookies.get('token') }),
-  login: (token: string) => {
+  user: (() => {
+    try {
+      const stored = Cookies.get('user')
+      return stored ? JSON.parse(stored) : null
+    } catch {
+      return null
+    }
+  })(),
+  checkAuth: () => {
+    const token = Cookies.get('token')
+    const userCookie = Cookies.get('user')
+    let user = null
+    try {
+      user = userCookie ? JSON.parse(userCookie) : null
+    } catch {}
+    set({ isAuthenticated: !!token, user })
+  },
+  login: (token: string, user: User) => {
     Cookies.set('token', token, { expires: 7 })
-    set({ isAuthenticated: true })
+    Cookies.set('user', JSON.stringify(user), { expires: 7 })
+    set({ isAuthenticated: true, user })
   },
   logout: () => {
     Cookies.remove('token')
-    set({ isAuthenticated: false })
+    Cookies.remove('user')
+    set({ isAuthenticated: false, user: null })
   },
 }))

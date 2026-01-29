@@ -1,11 +1,18 @@
 import { Payment,columns } from "./columns";
 import { DataTable } from "./data-table";
+import { cookies } from "next/headers";
 
 const getData = async (): Promise<Payment[]> => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
+
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/payment/payments`,
     {
       cache: "no-store",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     }
   );
 

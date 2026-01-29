@@ -61,7 +61,7 @@ app.use('/order', checkAuth, createProxyMiddleware({
     target: process.env.ORDER_SERVICE_URL || 'http://order-service:5002',
     changeOrigin: true,
     pathRewrite: {
-        '^/order': '', // remove base path
+        '^/order': '/api/v1', // map /order/* to /api/v1/*
     },
     onProxyReq: (proxyReq, req, res) => {
         // Explicitly set the header on the proxy request

@@ -293,30 +293,92 @@ const AddProduct = () => {
                               </FormItem>
                             ))}
                           </div>
-                          {/* Image URLs for selected colors */}
+                          {/* Image Upload for selected colors */}
                           {field.value && field.value.length > 0 && (
                             <div className="mt-8 space-y-4 border-t pt-4">
-                              <p className="text-sm font-medium">Image URLs for selected colors:</p>
-                              {field.value.map((color) => (
-                                <div className="flex items-center gap-2" key={color}>
-                                  <div
-                                    className="w-3 h-3 rounded-full border border-gray-200"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                  <span className="text-sm min-w-[60px]">{color}</span>
-                                  <Input 
-                                    className="flex-1"
-                                    placeholder={`https://example.com/${color}.png`}
-                                    onChange={(e) => {
-                                      const currentImages = form.getValues("images");
-                                      form.setValue("images", {
-                                        ...currentImages,
-                                        [color]: e.target.value
-                                      });
-                                    }}
-                                  />
-                                </div>
-                              ))}
+                              <p className="text-sm font-medium">Upload images for selected colors:</p>
+                              {field.value.map((color) => {
+                                const currentImage = form.watch(`images.${color}`) || "";
+                                return (
+                                  <div className="flex flex-col gap-2" key={color}>
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className="w-4 h-4 rounded-full border border-gray-300 shrink-0"
+                                        style={{ backgroundColor: color }}
+                                      />
+                                      <span className="text-sm font-medium capitalize min-w-[60px]">{color}</span>
+                                    </div>
+                                    {/* Image Preview */}
+                                    {currentImage && (
+                                      <div className="relative w-full h-24 bg-gray-100 rounded-lg overflow-hidden">
+                                        <img
+                                          src={currentImage}
+                                          alt={`${color} preview`}
+                                          className="w-full h-full object-contain"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const currentImages = form.getValues("images");
+                                            const updated = { ...currentImages };
+                                            delete updated[color];
+                                            form.setValue("images", updated);
+                                          }}
+                                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                                        >
+                                          ×
+                                        </button>
+                                      </div>
+                                    )}
+                                    {/* File Input or URL Input */}
+                                    <div className="flex gap-2">
+                                      <label className="flex-1 cursor-pointer">
+                                        <div className="flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors">
+                                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                          </svg>
+                                          <span className="text-sm text-gray-600">
+                                            {currentImage ? "Change Image" : "Upload Image"}
+                                          </span>
+                                        </div>
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                              // Convert to base64 for preview and storage
+                                              const reader = new FileReader();
+                                              reader.onloadend = () => {
+                                                const currentImages = form.getValues("images");
+                                                form.setValue("images", {
+                                                  ...currentImages,
+                                                  [color]: reader.result as string,
+                                                });
+                                              };
+                                              reader.readAsDataURL(file);
+                                            }
+                                          }}
+                                        />
+                                      </label>
+                                    </div>
+                                    {/* Or paste URL */}
+                                    <Input 
+                                      className="text-xs"
+                                      placeholder="Or paste image URL..."
+                                      value={currentImage.startsWith("data:") ? "" : currentImage}
+                                      onChange={(e) => {
+                                        const currentImages = form.getValues("images");
+                                        form.setValue("images", {
+                                          ...currentImages,
+                                          [color]: e.target.value,
+                                        });
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </div>

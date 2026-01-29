@@ -79,9 +79,11 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">User</p>
+            <p className="text-sm font-medium leading-none">
+              {useAuthStore.getState().user?.name || 'User'}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
-              user@example.com
+              {useAuthStore.getState().user?.email || 'user@example.com'}
             </p>
           </div>
         </DropdownMenuLabel>

@@ -62,8 +62,11 @@ export default function SignInPage() {
 
       const result = await response.json()
       
-      // Update global state AND cookie
-      login(result.token)
+      // Update global state AND cookie with user info
+      login(result.access_token, {
+        name: result.full_name || 'User',
+        email: data.email,
+      })
       
       toast.success("Login successful!")
       router.push("/")

@@ -1,5 +1,5 @@
 import ProductList from "@/components/ProductList";
-import Image from "next/image";
+import HeroBanner from "@/components/HeroBanner";
 
 const Homepage = async ({
   searchParams,
@@ -15,9 +15,7 @@ const Homepage = async ({
 
   return (
     <div className="">
-      <div className="relative aspect-[3/1] mb-12">
-        <Image src="/featured.png" alt="Featured Product" fill />
-      </div>
+      <HeroBanner />
       <ProductList category={category} params="homepage" products={products}/>
     </div>
   );

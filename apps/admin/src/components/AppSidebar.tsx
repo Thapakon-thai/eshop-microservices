@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Home,
   Inbox,
@@ -40,6 +42,7 @@ import AddOrder from "./AddOrder";
 import AddUser from "./AddUser";
 import AddCategory from "./AddCategory";
 import AddProduct from "./AddProduct";
+import { useRouter } from "next/navigation";
 
 const items = [
   {
@@ -70,6 +73,17 @@ const items = [
 ];
 
 const AppSidebar = () => {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Clear cookies
+    document.cookie = "accessToken=; path=/; max-age=0";
+    // Clear local storage
+    localStorage.removeItem("adminUser");
+    // Redirect to login
+    router.push("/login");
+  };
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="py-4">
@@ -241,7 +255,7 @@ const AppSidebar = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>Account</DropdownMenuItem>
                 <DropdownMenuItem>Setting</DropdownMenuItem>
-                <DropdownMenuItem>Sign out</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

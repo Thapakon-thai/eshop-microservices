@@ -2,11 +2,19 @@
 import { Order, columns } from "./columns";
 import { DataTable } from "../users/data-table"; // Reuse Datatable from users or shared component
 
+import { cookies } from "next/headers";
+
 const getData = async (): Promise<Order[]> => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
+
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/order/orders`,
     {
       cache: "no-store",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     }
   );
 
