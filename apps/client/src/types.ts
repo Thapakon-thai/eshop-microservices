@@ -1,9 +1,8 @@
 import { z } from "zod";
 
 export type ProductType = {
-  id: string | number;
+  id: string; // Changed from string | number to string (backend uses ObjectID hex)
   name: string;
-  shortDescription: string;
   description: string;
   price: number;
   sizes: string[];

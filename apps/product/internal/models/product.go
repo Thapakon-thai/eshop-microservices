@@ -9,4 +9,7 @@ type Product struct {
 	Price       float64            `bson:"price" json:"price"`
 	Stock       int32              `bson:"stock" json:"stock"`
 	CategoryID  string             `bson:"category_id" json:"category_id"`
+	Sizes       []string           `bson:"sizes" json:"sizes"`
+	Colors      []string           `bson:"colors" json:"colors"`
+	Images      map[string]string  `bson:"images" json:"images"`
 }

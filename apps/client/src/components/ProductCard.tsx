@@ -10,8 +10,8 @@ import { toast } from "react-toastify";
 
 const ProductCard = ({ product }: { product: ProductType }) => {
   const [productTypes, setProductTypes] = useState({
-    size: product.sizes[0],
-    color: product.colors[0],
+    size: product.sizes?.[0] || "",
+    color: product.colors?.[0] || "",
   });
 
   const { addToCart } = useCartStore();
@@ -39,13 +39,15 @@ const ProductCard = ({ product }: { product: ProductType }) => {
     toast.success("Product added to cart")
   };
 
+  const displayImage = (product.images && productTypes.color && product.images[productTypes.color]) || "/logo.png";
+
   return (
     <div className="shadow-lg rounded-lg overflow-hidden">
       {/* IMAGE */}
       <Link href={`/products/${product.id}`}>
         <div className="relative aspect-[2/3]">
           <Image
-            src={product.images[productTypes.color]}
+            src={displayImage}
             alt={product.name}
             fill
             className="object-cover hover:scale-105 transition-all duration-300"
@@ -55,7 +57,7 @@ const ProductCard = ({ product }: { product: ProductType }) => {
       {/* PRODUCT DETAIL */}
       <div className="flex flex-col gap-4 p-4">
         <h1 className="font-medium">{product.name}</h1>
-        <p className="text-sm text-gray-500">{product.shortDescription}</p>
+        <p className="text-sm text-gray-500">{product.description?.substring(0, 60)}...</p>
         {/* PRODUCT TYPES */}
         <div className="flex items-center gap-4 text-xs">
           {/* SIZES */}
@@ -69,7 +71,7 @@ const ProductCard = ({ product }: { product: ProductType }) => {
                 handleProductType({ type: "size", value: e.target.value })
               }
             >
-              {product.sizes.map((size) => (
+              {(product.sizes || []).map((size) => (
                 <option key={size} value={size}>
                   {size.toUpperCase()}
                 </option>
@@ -80,7 +82,7 @@ const ProductCard = ({ product }: { product: ProductType }) => {
           <div className="flex flex-col gap-1">
             <span className="text-gray-500">Color</span>
             <div className="flex items-center gap-2">
-              {product.colors.map((color) => (
+              {(product.colors || []).map((color) => (
                 <div
                   className={`cursor-pointer border-1 ${
                     productTypes.color === color

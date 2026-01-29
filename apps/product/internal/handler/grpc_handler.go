@@ -29,6 +29,9 @@ func (h *ProductGrpcHandler) GetProduct(ctx context.Context, req *pb.GetProductR
 		Price:       product.Price,
 		Stock:       product.Stock,
 		CategoryId:  product.CategoryID,
+		Sizes:       product.Sizes,
+		Colors:      product.Colors,
+		Images:      product.Images,
 	}, nil
 }
 
@@ -47,6 +50,9 @@ func (h *ProductGrpcHandler) ListProducts(ctx context.Context, req *pb.ListProdu
 			Price:       p.Price,
 			Stock:       p.Stock,
 			CategoryId:  p.CategoryID,
+			Sizes:       p.Sizes,
+			Colors:      p.Colors,
+			Images:      p.Images,
 		})
 	}
 
@@ -63,6 +69,9 @@ func (h *ProductGrpcHandler) CreateProduct(ctx context.Context, req *pb.CreatePr
 		Price:       req.Price,
 		Stock:       req.Stock,
 		CategoryID:  req.CategoryId,
+		Sizes:       req.Sizes,
+		Colors:      req.Colors,
+		Images:      req.Images,
 	}
 
 	if err := h.svc.CreateProduct(ctx, product); err != nil {
@@ -76,5 +85,8 @@ func (h *ProductGrpcHandler) CreateProduct(ctx context.Context, req *pb.CreatePr
 		Price:       product.Price,
 		Stock:       product.Stock,
 		CategoryId:  product.CategoryID,
+		Sizes:       product.Sizes,
+		Colors:      product.Colors,
+		Images:      product.Images,
 	}, nil
 }
