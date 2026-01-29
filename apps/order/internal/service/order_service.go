@@ -80,10 +80,22 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 		})
 	}
 
+	// Use provided subtotal if available, otherwise use calculated amount
+	subtotal := req.Subtotal
+	if subtotal == 0 {
+		subtotal = totalAmount.InexactFloat64()
+	}
+
+	// Calculate final total: subtotal + shipping - discount
+	finalTotal := subtotal + req.ShippingFee - req.Discount
+
 	// Save to DB
 	order := &models.Order{
 		UserID:      req.UserID,
-		TotalAmount: totalAmount.InexactFloat64(),
+		Subtotal:    subtotal,
+		ShippingFee: req.ShippingFee,
+		Discount:    req.Discount,
+		TotalAmount: finalTotal,
 		Status:      "pending",
 		Items:       orderItems,
 	}

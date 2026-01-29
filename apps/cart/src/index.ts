@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 const port = process.env.CART_SERVICE_PORT || 3001;
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Helper to get userId from header
 const getUserId = (req: express.Request): string | undefined => {

@@ -2,12 +2,16 @@ package models
 
 import (
 	"time"
+
 	"github.com/shopspring/decimal"
 )
 
 type Order struct {
 	ID          int64       `json:"id" gorm:"primaryKey"`
 	UserID      string      `json:"user_id"`
+	Subtotal    float64     `json:"subtotal"`
+	ShippingFee float64     `json:"shipping_fee"`
+	Discount    float64     `json:"discount"`
 	TotalAmount float64     `json:"total_amount"`
 	Status      string      `json:"status"` // e.g., "pending", "paid", "shipped"
 	CreatedAt   time.Time   `json:"created_at" gorm:"autoCreateTime"`
@@ -16,20 +20,23 @@ type Order struct {
 }
 
 type OrderItem struct {
-	ID        int64   `json:"id" gorm:"primaryKey"`
-	OrderID   int64   `json:"order_id"`
-	ProductID string  `json:"product_id"`
-	Quantity  int     `json:"quantity"`
+	ID        int64           `json:"id" gorm:"primaryKey"`
+	OrderID   int64           `json:"order_id"`
+	ProductID string          `json:"product_id"`
+	Quantity  int             `json:"quantity"`
 	Price     decimal.Decimal `json:"price"`
 }
 
 type CreateOrderRequest struct {
-	UserID string            `json:"user_id"`
-	Items  []CreateOrderItem `json:"items"`
+	UserID      string            `json:"user_id"`
+	Items       []CreateOrderItem `json:"items"`
+	Subtotal    float64           `json:"subtotal"`
+	ShippingFee float64           `json:"shipping_fee"`
+	Discount    float64           `json:"discount"`
 }
 
 type CreateOrderItem struct {
-	ProductID string  `json:"product_id"`
-	Quantity  int     `json:"quantity"`
+	ProductID string          `json:"product_id"`
+	Quantity  int             `json:"quantity"`
 	Price     decimal.Decimal `json:"price"`
 }

@@ -6,7 +6,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -30,6 +30,7 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Checkbox } from "./ui/checkbox";
 import { ScrollArea } from "./ui/scroll-area";
+import { useState } from "react";
 
 const categories = [
   "T-shirts",
@@ -91,6 +92,9 @@ const formSchema = z.object({
 });
 
 const AddProduct = () => {
+  // State to force file input reset after image deletion
+  const [fileInputKeys, setFileInputKeys] = useState<Record<string, number>>({});
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -100,6 +104,9 @@ const AddProduct = () => {
       stock: 100
     }
   });
+
+  // Watch images for reactivity
+  const watchedImages = useWatch({ control: form.control, name: "images" });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -117,6 +124,34 @@ const AddProduct = () => {
       });
 
       if (res.ok) {
+        const createdProduct = await res.json();
+        
+        // Auto-sync stock to inventory service
+        if (createdProduct.id && values.stock > 0) {
+          try {
+            const token = document.cookie
+              .split('; ')
+              .find(row => row.startsWith('access_token='))
+              ?.split('=')[1];
+            
+            if (token) {
+              await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/inventory/stock`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  product_id: createdProduct.id,
+                  quantity_change: values.stock,
+                }),
+              });
+            }
+          } catch (stockError) {
+            console.error("Failed to sync stock:", stockError);
+          }
+        }
+        
         alert("Product created successfully!");
         window.location.reload(); // Simple reload to refresh list
       } else {
@@ -298,7 +333,8 @@ const AddProduct = () => {
                             <div className="mt-8 space-y-4 border-t pt-4">
                               <p className="text-sm font-medium">Upload images for selected colors:</p>
                               {field.value.map((color) => {
-                                const currentImage = form.watch(`images.${color}`) || "";
+                                const currentImage = watchedImages?.[color] || "";
+                                const inputKey = fileInputKeys[color] || 0;
                                 return (
                                   <div className="flex flex-col gap-2" key={color}>
                                     <div className="flex items-center gap-2">
@@ -322,7 +358,9 @@ const AddProduct = () => {
                                             const currentImages = form.getValues("images");
                                             const updated = { ...currentImages };
                                             delete updated[color];
-                                            form.setValue("images", updated);
+                                            form.setValue("images", updated, { shouldValidate: true });
+                                            // Reset file input by changing its key
+                                            setFileInputKeys(prev => ({ ...prev, [color]: (prev[color] || 0) + 1 }));
                                           }}
                                           className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
                                         >
@@ -342,20 +380,20 @@ const AddProduct = () => {
                                           </span>
                                         </div>
                                         <input
+                                          key={`${color}-${inputKey}`}
                                           type="file"
                                           accept="image/*"
                                           className="hidden"
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) {
-                                              // Convert to base64 for preview and storage
                                               const reader = new FileReader();
                                               reader.onloadend = () => {
                                                 const currentImages = form.getValues("images");
                                                 form.setValue("images", {
                                                   ...currentImages,
                                                   [color]: reader.result as string,
-                                                });
+                                                }, { shouldValidate: true });
                                               };
                                               reader.readAsDataURL(file);
                                             }
@@ -367,13 +405,13 @@ const AddProduct = () => {
                                     <Input 
                                       className="text-xs"
                                       placeholder="Or paste image URL..."
-                                      value={currentImage.startsWith("data:") ? "" : currentImage}
+                                      value={(currentImage && !currentImage.startsWith("data:")) ? currentImage : ""}
                                       onChange={(e) => {
                                         const currentImages = form.getValues("images");
                                         form.setValue("images", {
                                           ...currentImages,
                                           [color]: e.target.value,
-                                        });
+                                        }, { shouldValidate: true });
                                       }}
                                     />
                                   </div>

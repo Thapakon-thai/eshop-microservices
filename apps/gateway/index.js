@@ -142,7 +142,7 @@ app.get('/products/:id', (req, res) => {
     });
 });
 
-app.post('/products', express.json(), (req, res) => {
+app.post('/products', express.json({ limit: '50mb' }), (req, res) => {
     productClient.CreateProduct(req.body, (err, response) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(response);

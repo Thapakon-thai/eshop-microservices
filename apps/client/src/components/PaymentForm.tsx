@@ -54,11 +54,13 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
       // Simulate payment processing delay
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Calculate total
+      // Calculate totals
       const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-      const total = subtotal - subtotal * 0.1 + 10; // 10% discount + $10 shipping
+      const discount = subtotal * 0.1; // 10% discount
+      const shippingFee = 10;
+      const total = subtotal - discount + shippingFee;
 
-      // Create order via API - Backend only expects items array
+      // Create order via API - Include pricing breakdown
       const token = Cookies.get("token");
       const orderPayload = {
         items: cart.map((item) => ({
@@ -66,6 +68,9 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
           quantity: item.quantity,
           price: item.price.toString(), // Backend expects decimal as string
         })),
+        subtotal: subtotal,
+        shipping_fee: shippingFee,
+        discount: discount,
       };
 
       const response = await fetch(`${apiBaseUrl}/order/orders`, {
