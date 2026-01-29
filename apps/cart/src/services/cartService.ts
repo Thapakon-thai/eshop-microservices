@@ -18,7 +18,12 @@ export class CartService {
             cart = { userId, items: [], totalPrice: 0 };
         }
 
-        const existingItemIndex = cart.items.findIndex(i => i.productId === item.productId);
+        const existingItemIndex = cart.items.findIndex(i => 
+            i.productId === item.productId && 
+            i.selectedSize === item.selectedSize && 
+            i.selectedColor === item.selectedColor
+        );
+        
         if (existingItemIndex > -1) {
             cart.items[existingItemIndex].quantity += item.quantity;
         } else {
@@ -30,11 +35,28 @@ export class CartService {
         return cart;
     }
 
-    static async removeItem(userId: string, productId: string): Promise<Cart> {
+    static async removeItem(userId: string, productId: string, selectedSize?: string, selectedColor?: string): Promise<Cart> {
         const cart = await this.getCart(userId);
         if (!cart) return { userId, items: [], totalPrice: 0 };
 
-        cart.items = cart.items.filter(item => item.productId !== productId);
+        cart.items = cart.items.filter(item => {
+            // Keep item if productId doesn't match
+            if (item.productId !== productId) return true;
+            
+            // If productId matches, check variants (if provided)
+            // If size/color provided, only remove if they match. 
+            // If not provided, remove all of that productId (legacy behavior or bulk remove)? 
+            // Let's assume strict matching if provided.
+            
+            const sizeMatches = !selectedSize || item.selectedSize === selectedSize;
+            const colorMatches = !selectedColor || item.selectedColor === selectedColor;
+
+            // If everything matches, we want to REMOVE it (return false)
+            if (sizeMatches && colorMatches) return false;
+
+            return true;
+        });
+        
         this.calculateTotal(cart);
         await this.saveCart(userId, cart);
         return cart;

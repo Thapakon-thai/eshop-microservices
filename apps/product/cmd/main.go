@@ -38,7 +38,7 @@ func main() {
 	}()
 	database := mongoClient.Database(cfg.DBName)
 
-	// Layers
+	// Layers (Dependency Injection)
 	repo := repository.NewMongoRepository(database)
 	svc := service.NewProductService(repo)
 	grpcHandler := handler.NewProductGrpcHandler(svc)
@@ -52,10 +52,11 @@ func main() {
 
 	s := grpc.NewServer()
 	pb.RegisterProductServiceServer(s, grpcHandler)
-	reflection.Register(s)
+	reflection.Register(s) // for debugging
 
 	go func() {
 		slog.Info("Starting gRPC server", "port", cfg.ServicePort)
+		// s.Serve is blocking call so I use go routine to run it in background
 		if err := s.Serve(lis); err != nil {
 			slog.Error("Failed to serve gRPC", "error", err)
 			os.Exit(1)

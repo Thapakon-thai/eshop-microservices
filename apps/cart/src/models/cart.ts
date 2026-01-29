@@ -3,6 +3,9 @@ export interface CartItem {
     quantity: number;
     name: string;
     price: number;
+    selectedSize?: string;
+    selectedColor?: string;
+    image?: string;
 }
 
 export interface Cart {

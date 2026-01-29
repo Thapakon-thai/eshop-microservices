@@ -23,7 +23,7 @@ export type CartItemsType = CartItemType[];
 
 export const shippingFormSchema = z.object({
   name: z.string().min(1, "Name is required!"),
-  email: z.email().min(1, "Email is required!"),
+  email: z.string().email("Invalid email").min(1, "Email is required!"),
   phone: z
     .string()
     .min(7, "Phone number must be between 7 and 10 digits!")
@@ -61,4 +61,5 @@ export type CartStoreActionsType = {
   addToCart: (product: CartItemType) => void;
   removeFromCart: (product: CartItemType) => void;
   clearCart: () => void;
+  fetchCart: () => Promise<void>;
 };

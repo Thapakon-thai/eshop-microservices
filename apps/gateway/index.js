@@ -1,8 +1,13 @@
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const axios = require('axios');
+const cors = require('cors');
 
 const app = express();
+app.use(cors({
+    origin: ['http://localhost:3000', 'http://localhost:3002'],
+    credentials: true
+}));
 const PORT = 8000;
 
 // Auth Service Proxy
@@ -10,7 +15,7 @@ app.use('/auth', createProxyMiddleware({
     target: process.env.AUTH_SERVICE_URL || 'http://auth-service:5001',
     changeOrigin: true,
     pathRewrite: {
-        '^/auth': '', // remove base path
+        '^/auth': '/api/v1', // map /auth/* to /api/v1/*
     },
 }));
 
@@ -166,9 +171,7 @@ app.get('/inventory/:productId', (req, res) => {
 app.use('/cart', checkAuth, createProxyMiddleware({
     target: process.env.CART_SERVICE_URL || 'http://cart-service:3001',
     changeOrigin: true,
-    pathRewrite: {
-        '^/cart': '', // remove base path
-    },
+
     onProxyReq: (proxyReq, req, res) => {
          if (req.headers['x-user-id']) {
             proxyReq.setHeader('x-user-id', req.headers['x-user-id']);
