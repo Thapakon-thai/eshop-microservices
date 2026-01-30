@@ -10,11 +10,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-// import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 export type Product = {
   id: string;
@@ -25,6 +36,64 @@ export type Product = {
   colors: string[];
   images: Record<string, string>;
 };
+
+async function deleteProduct(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/products/${id}`,
+      { method: "DELETE" }
+    );
+    if (res.ok) {
+      window.location.reload();
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    return false;
+  }
+}
+
+// Wrapper component for Delete action with AlertDialog
+function DeleteAction({ product }: { product: Product }) {
+  const [open, setOpen] = useState(false);
+
+  const handleDelete = async () => {
+    await deleteProduct(product.id);
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <DropdownMenuItem
+          onSelect={(e) => e.preventDefault()}
+          className="text-red-600 focus:text-red-600 cursor-pointer"
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete{" "}
+            <strong>&quot;{product.name}&quot;</strong> from the database.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            className="bg-red-500 hover:bg-red-600"
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 export const columns: ColumnDef<Product>[] = [
   {
@@ -85,7 +154,7 @@ export const columns: ColumnDef<Product>[] = [
     accessorKey: "description",
     header: "Description",
     cell: ({ row }) => {
-       return <span className="truncate max-w-[200px] block" title={row.getValue("description")}>{row.getValue("description")}</span> // Truncate description
+       return <span className="truncate max-w-[200px] block" title={row.getValue("description")}>{row.getValue("description")}</span>
     }
   },
   {
@@ -112,6 +181,7 @@ export const columns: ColumnDef<Product>[] = [
             <DropdownMenuItem>
               <Link href={`/products/${product.id}`}>View Product</Link>
             </DropdownMenuItem>
+            <DeleteAction product={product} />
           </DropdownMenuContent>
         </DropdownMenu>
       );

@@ -8,6 +8,15 @@ service ProductService {
   rpc GetProduct (GetProductRequest) returns (ProductResponse);
   rpc ListProducts (ListProductsRequest) returns (ListProductsResponse);
   rpc CreateProduct (CreateProductRequest) returns (ProductResponse);
+  rpc DeleteProduct (DeleteProductRequest) returns (DeleteProductResponse);
+}
+
+message DeleteProductRequest {
+  string id = 1;
+}
+
+message DeleteProductResponse {
+  bool success = 1;
 }
 
 message CreateProductRequest {

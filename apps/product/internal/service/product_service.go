@@ -26,3 +26,7 @@ func (s *ProductService) GetProduct(ctx context.Context, id string) (*models.Pro
 func (s *ProductService) ListProducts(ctx context.Context, page, limit int32, categoryID string) ([]*models.Product, int64, error) {
 	return s.repo.FindAll(ctx, page, limit, categoryID)
 }
+
+func (s *ProductService) DeleteProduct(ctx context.Context, id string) error {
+	return s.repo.Delete(ctx, id)
+}

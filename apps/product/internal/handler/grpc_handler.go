@@ -90,3 +90,10 @@ func (h *ProductGrpcHandler) CreateProduct(ctx context.Context, req *pb.CreatePr
 		Images:      product.Images,
 	}, nil
 }
+
+func (h *ProductGrpcHandler) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*pb.DeleteProductResponse, error) {
+	if err := h.svc.DeleteProduct(ctx, req.Id); err != nil {
+		return nil, err
+	}
+	return &pb.DeleteProductResponse{Success: true}, nil
+}

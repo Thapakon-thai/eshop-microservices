@@ -14,6 +14,7 @@ type ProductRepository interface {
 	Create(ctx context.Context, product *models.Product) error
 	FindByID(ctx context.Context, id string) (*models.Product, error)
 	FindAll(ctx context.Context, page, limit int32, categoryID string) ([]*models.Product, int64, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type mongoRepository struct {
@@ -78,4 +79,13 @@ func (r *mongoRepository) FindAll(ctx context.Context, page, limit int32, catego
 		return nil, 0, err
 	}
 	return products, total, nil
+}
+
+func (r *mongoRepository) Delete(ctx context.Context, id string) error {
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.Collection("products").DeleteOne(ctx, bson.M{"_id": oid})
+	return err
 }
