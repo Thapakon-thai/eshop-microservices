@@ -16,12 +16,12 @@ type GrpcClients struct {
 }
 
 func NewGrpcClients(productUrl, inventoryUrl string) *GrpcClients {
-	productConn, err := grpc.Dial(productUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	productConn, err := grpc.NewClient(productUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect to product service: %v", err)
 	}
 
-	inventoryConn, err := grpc.Dial(inventoryUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	inventoryConn, err := grpc.NewClient(inventoryUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect to inventory service: %v", err)
 	}

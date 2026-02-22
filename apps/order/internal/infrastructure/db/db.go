@@ -9,8 +9,8 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func NewPostgres(dns string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(dns), &gorm.Config{
+func NewPostgres(dsn string) (*gorm.DB, error) {
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode((logger.Info)),
 	})
 	if err != nil {
