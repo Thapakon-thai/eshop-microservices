@@ -1,19 +1,22 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
-# Copy the entire workspace context
-COPY . .
+COPY apps/payment/go.mod ./apps/payment/
+COPY packages/proto ./packages/proto
 
-# Build the payment service
-RUN go build -o payment-service apps/payment/cmd/api/main.go
+WORKDIR /app/apps/payment
+COPY apps/payment .
+RUN go mod tidy
+
+RUN go build -o main ./cmd/api/main.go
 
 # Final stage
 FROM alpine:latest
 
 WORKDIR /app
-COPY --from=builder /app/payment-service .
+COPY --from=builder /app/apps/payment/main .
 
 EXPOSE 5003
 
-CMD ["./payment-service"]
+CMD ["./main"]

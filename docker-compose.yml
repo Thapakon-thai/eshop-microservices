@@ -139,8 +139,10 @@ services:
     networks:
       - ecommerce-network
 
-  payment-service: # Java
-    build: ./apps/payment
+  payment-service: # Go
+    build:
+      context: .
+      dockerfile: ./apps/payment/Dockerfile
     ports:
       - "${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}"
     depends_on:
@@ -149,12 +151,13 @@ services:
       rabbitmq:
         condition: service_started
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${PAYMENT_DB_NAME}
-      - SPRING_DATASOURCE_USERNAME=${DB_USER}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST}
-      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - PAYMENT_DB_NAME=${PAYMENT_DB_NAME}
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/
+      - PAYMENT_SERVICE_PORT=${PAYMENT_SERVICE_PORT}
     networks:
       - ecommerce-network
 
