@@ -8,10 +8,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/thapakon-thai/eshop-microservices/payment/internal/adapter/repository"
 	"github.com/thapakon-thai/eshop-microservices/payment/internal/handler"
 	"github.com/thapakon-thai/eshop-microservices/payment/internal/infrastructure/db"
-	"github.com/thapakon-thai/eshop-microservices/payment/internal/models"
-	"github.com/thapakon-thai/eshop-microservices/payment/internal/repository"
 	"github.com/thapakon-thai/eshop-microservices/payment/internal/service"
 )
 
@@ -33,8 +32,10 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Auto Migration
-	database.AutoMigrate(&models.Payment{})
+	// Auto Migration mapped against DB Model (Adapter specific)
+	if err := database.AutoMigrate(&repository.PaymentDBModel{}); err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
 
 	// Layers Initialization
 	repo := repository.NewPostgresRepository(database)
@@ -64,4 +65,3 @@ func main() {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
-

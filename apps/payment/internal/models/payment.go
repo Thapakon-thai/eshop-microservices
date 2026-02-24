@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type PaymentStatus string
 
@@ -11,14 +14,29 @@ const (
 	PaymentStatusCancelled PaymentStatus = "CANCELLED"
 )
 
+// Payment represents the pristine domain model structurally ignorant of GORM or REST formatting.
 type Payment struct {
-	ID        string        `json:"id" db:"id"`
-	OrderID   string        `json:"order_id" db:"order_id"`
-	UserID    string        `json:"user_id" db:"user_id"`
-	FullName  string        `json:"full_name" db:"full_name"`
-	Email     string        `json:"email" db:"email"`
-	Amount    float64       `json:"amount" db:"amount"`
-	Status    PaymentStatus `json:"status" db:"status"`
-	CreatedAt time.Time     `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time     `json:"updated_at" db:"updated_at"`
+	ID        string
+	OrderID   string
+	UserID    string
+	FullName  string
+	Email     string
+	Amount    int64 // Stored in Cents (e.g. 1000 = $10.00)
+	Status    PaymentStatus
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// Validate ensures structural Domain bounds.
+func (p *Payment) Validate() error {
+	if p.OrderID == "" {
+		return errors.New("order ID cannot be empty")
+	}
+	if p.UserID == "" {
+		return errors.New("user ID cannot be empty")
+	}
+	if p.Amount <= 0 {
+		return errors.New("payment amount must be greater than zero")
+	}
+	return nil
 }
