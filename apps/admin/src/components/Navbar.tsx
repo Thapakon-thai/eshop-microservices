@@ -24,10 +24,10 @@ const Navbar = () => {
     document.cookie = "accessToken=; path=/; max-age=0";
     localStorage.removeItem("adminUser");
     router.push("/login");
-  }
+  };
 
   return (
-    <nav className="p-4 flex items-center justify-between sticky top-0 bg-background z-10">
+    <nav className="p-3 mx-4 mt-4 flex items-center justify-between sticky top-4 bg-background/60 backdrop-blur-xl z-50 rounded-2xl border border-border/50 shadow-sm transition-all duration-300">
       {/* LEFT */}
       <SidebarTrigger />
       {/* RIGHT */}
@@ -72,7 +72,11 @@ const Navbar = () => {
               <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onClick={handleLogout} className="cursor-pointer">
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={handleLogout}
+              className="cursor-pointer"
+            >
               <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
               Logout
             </DropdownMenuItem>

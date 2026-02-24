@@ -36,13 +36,17 @@ const ProductCard = ({ product }: { product: ProductType }) => {
       selectedSize: productTypes.size,
       selectedColor: productTypes.color,
     });
-    toast.success("Product added to cart")
+    toast.success("Product added to cart");
   };
 
-  const displayImage = (product.images && productTypes.color && product.images[productTypes.color]) || "/logo.png";
+  const displayImage =
+    (product.images &&
+      productTypes.color &&
+      product.images[productTypes.color]) ||
+    "/logo.png";
 
   return (
-    <div className="shadow-lg rounded-lg overflow-hidden">
+    <div className="group bg-white dark:bg-zinc-900 shadow-sm hover:shadow-2xl rounded-2xl overflow-hidden transition-all duration-300 border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 hover:-translate-y-1">
       {/* IMAGE */}
       <Link href={`/products/${product.id}`}>
         <div className="relative aspect-[2/3]">
@@ -50,14 +54,18 @@ const ProductCard = ({ product }: { product: ProductType }) => {
             src={displayImage}
             alt={product.name}
             fill
-            className="object-cover hover:scale-105 transition-all duration-300"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         </div>
       </Link>
       {/* PRODUCT DETAIL */}
       <div className="flex flex-col gap-4 p-4">
-        <h1 className="font-medium">{product.name}</h1>
-        <p className="text-sm text-gray-500">{product.description?.substring(0, 60)}...</p>
+        <h1 className="font-semibold text-lg line-clamp-1 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+          {product.name}
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+          {product.description}
+        </p>
         {/* PRODUCT TYPES */}
         <div className="flex items-center gap-4 text-xs">
           {/* SIZES */}
@@ -104,14 +112,16 @@ const ProductCard = ({ product }: { product: ProductType }) => {
           </div>
         </div>
         {/* PRICE AND ADD TO CART BUTTON */}
-        <div className="flex items-center justify-between">
-          <p className="font-medium">${product.price.toFixed(2)}</p>
+        <div className="flex items-center justify-between mt-2">
+          <p className="font-bold text-lg dark:text-white">
+            ${product.price.toFixed(2)}
+          </p>
           <button
             onClick={handleAddToCart}
-            className="ring-1 ring-gray-200 shadow-lg rounded-md px-2 py-1 text-sm cursor-pointer hover:text-white hover:bg-black transition-all duration-300 flex items-center gap-2"
+            className="rounded-full bg-black dark:bg-white text-white dark:text-black px-4 py-2 text-sm font-medium hover:bg-violet-600 dark:hover:bg-violet-500 hover:text-white transition-colors duration-300 flex items-center gap-2 shadow-md hover:shadow-violet-500/30"
           >
             <ShoppingCart className="w-4 h-4" />
-            Add to Cart
+            Add
           </button>
         </div>
       </div>

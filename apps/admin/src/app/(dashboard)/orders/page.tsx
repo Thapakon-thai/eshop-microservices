@@ -1,4 +1,3 @@
-
 import { Order, columns } from "./columns";
 import { DataTable } from "../users/data-table"; // Reuse Datatable from users or shared component
 
@@ -8,30 +7,30 @@ const getData = async (): Promise<Order[]> => {
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/order/orders`,
-    {
-      cache: "no-store",
-      headers: {
-        Authorization: `Bearer ${token}`,
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/order/orders`,
+      {
+        cache: "no-store",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
+    );
+
+    if (!res.ok) {
+      console.error("Failed to fetch orders, status:", res.status);
+      return [];
     }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch orders");
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return [];
   }
-
-  return res.json();
 };
 
 const OrdersPage = async () => {
-  let data: Order[] = [];
-  try {
-      data = await getData();
-  } catch (error) {
-      console.error(error);
-  }
+  const data = await getData();
 
   return (
     <div className="">

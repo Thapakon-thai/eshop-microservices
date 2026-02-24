@@ -6,21 +6,27 @@ const getData = async (): Promise<User[]> => {
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/auth/users`,
-    {
-      cache: "no-store",
-      headers: {
-        Authorization: `Bearer ${token}`,
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/auth/users`,
+      {
+        cache: "no-store",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
+    );
+
+    if (!res.ok) {
+      console.error("Failed to fetch users, status:", res.status);
+      return [];
     }
-  );
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch users");
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return [];
   }
-
-  return res.json();
 };
 
 const UsersPage = async () => {
