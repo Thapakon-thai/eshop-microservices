@@ -14,7 +14,6 @@ export class RedisCartRepository implements CartRepository {
         }
         
         const parsed = JSON.parse(cartJson);
-        // Re-hydrate the plain JSON back into the Domain entity
         return new Cart(parsed.userId, parsed.items || [], parsed.totalPrice || 0);
     }
 

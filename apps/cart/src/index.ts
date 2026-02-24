@@ -12,18 +12,15 @@ const port = process.env.CART_SERVICE_PORT || 3001;
 
 app.use(express.json({ limit: '50mb' }));
 
-// --- Hexagonal Dependency Injection Bootstrapping ---
 const cartRepository = new RedisCartRepository(client);
 const cartService = new CartService(cartRepository);
 const cartController = new CartController(cartService);
 
-// --- Header-based Routes (Preferred) ---
 app.get('/cart', cartController.getCart);
 app.post('/cart/item', cartController.addItem);
 app.delete('/cart/item/:productId', cartController.removeItemLegacy);
 app.delete('/cart', cartController.clearCartLocal);
 
-// --- Parameter-based Routes (Legacy/Internal) ---
 app.get('/cart/:userId', cartController.getCartParam);
 app.post('/cart/:userId/item', cartController.addItemParam);
 app.delete('/cart/:userId/item/:productId', cartController.removeItemParam);

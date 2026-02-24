@@ -5,18 +5,13 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("accessToken")?.value;
   const { pathname } = request.nextUrl;
 
-  // Paths that don't require authentication
   if (pathname === "/login") {
-    // If user is already logged in, redirect to dashboard
-    // Note: We can't easily check 'admin' role here without decoding JWT or making API call, 
-    // but basic token check prevents login loop for valid users.
     if (token) {
        return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
   }
 
-  // Protect all other routes
   if (!token) {
     return NextResponse.redirect(new URL("/login", request.url));
   }

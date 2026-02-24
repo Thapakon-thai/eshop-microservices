@@ -12,7 +12,6 @@ const useCartStore = create<CartStoreStateType & CartStoreActionsType>()(
       hasHydrated: false,
       
       addToCart: async (product) => {
-        // Optimistic update
         set((state) => {
           const existingIndex = state.cart.findIndex(
             (p) =>
@@ -40,7 +39,6 @@ const useCartStore = create<CartStoreStateType & CartStoreActionsType>()(
           };
         });
 
-        // Backend Sync
         const token = Cookies.get("token");
         if (token) {
           try {
@@ -126,13 +124,6 @@ const useCartStore = create<CartStoreStateType & CartStoreActionsType>()(
             });
             if (response.ok) {
                const data = await response.json();
-               // Transform backend cart items to frontend CartItemsType
-               // Backend: { items: [{ productId, quantity, name, price, selectedSize, selectedColor, image }] }
-               // Frontend expects: ProductType & { quantity... }
-               // This is tricky. Backend doesn't store full Product details (shortDescription, description, images map, etc.)
-               // We only receive what we saved.
-               // For now, we construct a partial object.
-               
                const mappedItems: CartItemsType = (data.items || []).map((item: any) => ({
                     id: item.productId,
                     name: item.name,

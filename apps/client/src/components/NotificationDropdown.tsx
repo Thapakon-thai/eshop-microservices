@@ -32,7 +32,6 @@ export function NotificationDropdown() {
 
     if (isAuthenticated) {
       fetchNotifications();
-      // Poll for new notifications every 10 seconds
       interval = setInterval(() => {
         fetchNotifications();
       }, 10000);
@@ -86,7 +85,7 @@ export function NotificationDropdown() {
       );
 
       if (res.ok) {
-        fetchNotifications(); // Refresh list to clear unread status
+        fetchNotifications();
       }
     } catch (error) {
       console.error("Failed to mark all as read:", error);

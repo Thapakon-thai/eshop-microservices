@@ -16,7 +16,6 @@ type OrderServiceImpl struct {
 	publisher       OrderEventPublisher
 }
 
-// constructor
 func NewOrderService(
 	repo OrderRepository,
 	productClient ProductServiceClient,
@@ -39,12 +38,10 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 	var totalAmount int64
 	var orderItems []models.OrderItem
 
-	// Validate Products and Check/Deduct Stock
+	// Validate Products and Stock
 	for _, itemReq := range req.Items {
-		// 1. Get Product Details from Port
 		productRes, err := s.productClient.GetProduct(ctx, itemReq.ProductID)
 		if err != nil {
-			// If Adapter mapped to domain error, return it.
 			if errors.Is(err, ErrProductNotFound) {
 				return nil, err
 			}
@@ -53,7 +50,6 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 
 		price := productRes.Price
 
-		// 2. Check Stock via Port
 		stockQty, err := s.inventoryClient.CheckStock(ctx, itemReq.ProductID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to check stock for %s: %w", itemReq.ProductID, err)
@@ -62,7 +58,6 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 			return nil, fmt.Errorf("%w for product %s", ErrInventoryShortage, itemReq.ProductID)
 		}
 
-		// 3. Deduct Stock via Port
 		err = s.inventoryClient.DeductStock(ctx, itemReq.ProductID, int32(itemReq.Quantity))
 		if err != nil {
 			// In a real system, we'd need to rollback previous deductions here / implement saga.
@@ -84,10 +79,9 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 		subtotal = totalAmount
 	}
 
-	// Calculate final total: subtotal + shipping - discount
+	// Calculate total: subtotal + shipping - discount
 	finalTotal := subtotal + req.ShippingFee - req.Discount
 
-	// Save to DB
 	order := &models.Order{
 		UserID:      req.UserID,
 		Subtotal:    subtotal,
@@ -103,7 +97,6 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 		return nil, fmt.Errorf("failed to create order: %w", err)
 	}
 
-	// Publish Event via Port
 	if err := s.publisher.PublishOrderCreated(order); err != nil {
 		log.Printf("Failed to publish order created event: %v\n", err)
 	}
@@ -140,7 +133,6 @@ func (s *OrderServiceImpl) UpdateOrderStatus(ctx context.Context, id string, sta
 		return err
 	}
 
-	// Fetch the updated order and publish an event
 	order, err := s.repo.GetOrders(ctx, id)
 	if err == nil {
 		if pubErr := s.publisher.PublishOrderStatusUpdated(order); pubErr != nil {

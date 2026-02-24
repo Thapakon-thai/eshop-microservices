@@ -92,7 +92,6 @@ const formSchema = z.object({
 });
 
 const AddProduct = () => {
-  // State to force file input reset after image deletion
   const [fileInputKeys, setFileInputKeys] = useState<Record<string, number>>(
     {},
   );
@@ -107,14 +106,13 @@ const AddProduct = () => {
     },
   });
 
-  // Watch images for reactivity
   const watchedImages = useWatch({ control: form.control, name: "images" });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       const payload = {
         ...values,
-        category_id: values.category.toLowerCase(), // basic mapping
+        category_id: values.category.toLowerCase(),
       };
 
       const res = await fetch(

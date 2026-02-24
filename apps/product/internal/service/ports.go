@@ -6,7 +6,6 @@ import (
 	"github.com/thapakon-thai/eshop-microservices/product/internal/models"
 )
 
-// ProductService is the Primary Port.
 type ProductService interface {
 	CreateProduct(ctx context.Context, product *models.Product) error
 	GetProduct(ctx context.Context, id string) (*models.Product, error)
@@ -14,7 +13,6 @@ type ProductService interface {
 	DeleteProduct(ctx context.Context, id string) error
 }
 
-// ProductRepository is the Secondary Port for the Database.
 type ProductRepository interface {
 	Create(ctx context.Context, product *models.Product) error
 	FindByID(ctx context.Context, id string) (*models.Product, error)

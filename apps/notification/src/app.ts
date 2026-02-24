@@ -7,7 +7,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Get all notifications for a specific user
 app.get('/api/v1/notifications', async (req, res) => {
     try {
         const userId = req.headers['x-user-id'] as string;
@@ -23,7 +22,6 @@ app.get('/api/v1/notifications', async (req, res) => {
     }
 });
 
-// Mark all notifications as read for a specific user
 app.patch('/api/v1/notifications/read-all', async (req, res) => {
     try {
         const userId = req.headers['x-user-id'] as string;

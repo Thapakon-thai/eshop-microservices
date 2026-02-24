@@ -38,7 +38,6 @@ func (s *paymentServiceImpl) ProcessPayment(ctx context.Context, orderID, userID
 	}
 
 	// Mocking payment processing
-	// In a real scenario, this would call a payment gateway (Stripe, Omise, etc.)
 	time.Sleep(100 * time.Millisecond)
 
 	payment.Status = models.PaymentStatusCompleted

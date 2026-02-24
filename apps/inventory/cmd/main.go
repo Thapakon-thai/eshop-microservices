@@ -32,25 +32,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Database
 	gormDB, err := db.NewPostgres(dsn)
 	if err != nil {
 		slog.Error("Failed to connect to database", "error", err)
 		os.Exit(1)
 	}
 
-	// Auto Migrate (Using DB-specific model instead of Domain)
 	if err := gormDB.AutoMigrate(&repository.InventoryDBModel{}); err != nil {
 		slog.Error("Failed to migrate database", "error", err)
 		os.Exit(1)
 	}
 
-	// Layers
 	repo := repository.NewPostgresRepository(gormDB)
 	svc := service.NewInventoryService(repo)
 	grpcHandler := handler.NewInventoryGrpcHandler(svc)
 
-	// GRPC Server
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		slog.Error("Failed to listen", "error", err)
@@ -69,7 +65,6 @@ func main() {
 		}
 	}()
 
-	// Wait for interrupt
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

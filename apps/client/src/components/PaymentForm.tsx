@@ -16,7 +16,6 @@ import useCartStore from "@/stores/cartStore";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// Test card details for easy testing
 const TEST_CARD = {
   cardHolder: "Test User",
   cardNumber: "4242424242424242",
@@ -56,7 +55,6 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
     setIsProcessing(true);
 
     try {
-      // Simulate payment processing delay
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Calculate totals
@@ -68,8 +66,7 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
       const shippingFee = 10;
       const total = subtotal - discount + shippingFee;
 
-      // Create order via API - Include pricing breakdown
-      // Backend expects int64 (cents), so convert dollar amounts to cents
+      // Create order via API
       const token = Cookies.get("token");
       const orderPayload = {
         items: cart.map((item) => ({
@@ -136,7 +133,6 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
       );
 
       if (!statusResponse.ok) {
-        // Payment succeeded but status update failed - log it
         console.error("Failed to update order status to paid");
       }
 

@@ -23,7 +23,7 @@ const Homepage = async () => {
   try {
     const [paymentsRes, productsRes, ordersRes] = await Promise.all([
       fetch(`${apiUrl}/payment/payments`, fetchOptions),
-      fetch(`${apiUrl}/products?limit=20`, { cache: "no-store" }), // public route
+      fetch(`${apiUrl}/products?limit=20`, { cache: "no-store" }),
       fetch(`${apiUrl}/order/orders`, fetchOptions),
     ]);
 
@@ -37,7 +37,6 @@ const Homepage = async () => {
     console.error("Failed to fetch dashboard data:", err);
   }
 
-  // Compute summary stats
   const totalRevenue = (payments ?? []).reduce(
     (sum: number, p: any) => sum + (p.amount || 0),
     0,
@@ -53,7 +52,6 @@ const Homepage = async () => {
 
   return (
     <div className="flex flex-col gap-6 p-4">
-      {/* Row 1: Summary Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className={`${cardClass} flex items-center gap-4`}>
           <div className="p-3 rounded-2xl bg-green-500/10">
@@ -95,7 +93,6 @@ const Homepage = async () => {
         </div>
       </div>
 
-      {/* Row 2: Revenue Chart + Pie Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className={`${cardClass} lg:col-span-2`}>
           <AppBarChart data={payments} />
@@ -107,7 +104,6 @@ const Homepage = async () => {
         </div>
       </div>
 
-      {/* Row 3: Order Volume + Latest Transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className={`${cardClass} lg:col-span-2`}>
           <AppAreaChart data={orders} />

@@ -19,7 +19,7 @@ app.use(
     target: process.env.AUTH_SERVICE_URL || "http://auth-service:5001",
     changeOrigin: true,
     pathRewrite: {
-      "^/auth": "/api/v1", // map /auth/* to /api/v1/*
+      "^/auth": "/api/v1",
     },
   }),
 );
@@ -73,10 +73,9 @@ app.use(
     target: process.env.ORDER_SERVICE_URL || "http://order-service:5002",
     changeOrigin: true,
     pathRewrite: {
-      "^/order": "/api/v1", // map /order/* to /api/v1/*
+      "^/order": "/api/v1",
     },
     onProxyReq: (proxyReq, req, res) => {
-      // Explicitly set the header on the proxy request
       if (req.headers["x-user-id"]) {
         proxyReq.setHeader("x-user-id", req.headers["x-user-id"]);
       }
@@ -84,7 +83,7 @@ app.use(
   }),
 );
 
-// Payment Service Proxy (Optional, usually internal but exposed for debug if needed)
+// Payment Service Proxy
 app.use(
   "/payment",
   checkAuth,
@@ -92,10 +91,9 @@ app.use(
     target: process.env.PAYMENT_SERVICE_URL || "http://payment-service:5003",
     changeOrigin: true,
     pathRewrite: {
-      "^/payment": "/api/v1", // map /payment/* to /api/v1/*
+      "^/payment": "/api/v1",
     },
     onProxyReq: (proxyReq, req, res) => {
-      // Explicitly set the header on the proxy request
       if (req.headers["x-user-id"]) {
         proxyReq.setHeader("x-user-id", req.headers["x-user-id"]);
       }
@@ -111,7 +109,7 @@ app.use(
     target: process.env.NOTIFICATION_SERVICE_URL || "http://notification-service:5004",
     changeOrigin: true,
     pathRewrite: {
-      "^/notification": "/api/v1", // map /notification/* to /api/v1/*
+      "^/notification": "/api/v1",
     },
     onProxyReq: (proxyReq, req, res) => {
       if (req.headers["x-user-id"]) {
@@ -164,7 +162,7 @@ const inventoryClient = new inventoryProto.InventoryService(
   grpc.credentials.createInsecure(),
 );
 
-// --- Product Routes (REST -> gRPC) ---
+// Product Routes (REST -> gRPC)
 app.get("/products", (req, res) => {
   productClient.ListProducts(
     {
@@ -200,7 +198,7 @@ app.delete("/products/:id", (req, res) => {
   });
 });
 
-// --- Inventory Routes (REST -> gRPC) ---
+// Inventory Routes (REST -> gRPC)
 app.post("/inventory/stock", express.json(), (req, res) => {
   inventoryClient.UpdateStock(
     {
@@ -224,7 +222,7 @@ app.get("/inventory/:productId", (req, res) => {
   );
 });
 
-// --- Cart Service Proxy (HTTP) ---
+// Cart Service Proxy (HTTP)
 app.use(
   "/cart",
   checkAuth,

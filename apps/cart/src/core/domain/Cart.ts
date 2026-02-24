@@ -2,7 +2,7 @@ export interface CartItem {
     productId: string;
     quantity: number;
     name: string;
-    price: number; // Stored in Cents (e.g. 1000 = $10.00)
+    price: number;
     selectedSize?: string;
     selectedColor?: string;
     image?: string;
@@ -12,19 +12,13 @@ export class Cart {
     constructor(
         public userId: string,
         public items: CartItem[] = [],
-        public totalPrice: number = 0 // Stored in Cents
+        public totalPrice: number = 0
     ) {}
 
-    /**
-     * Re-calculates the aggregate total of the cart based purely on its items structure
-     */
     calculateTotal(): void {
         this.totalPrice = this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
     }
 
-    /**
-     * Domain level validation guaranteeing mathematical and referential integrity
-     */
     validate(): void {
         if (!this.userId) {
             throw new Error("Cart must have an associated User ID");

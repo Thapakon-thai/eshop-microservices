@@ -17,16 +17,14 @@ type rabbitMQPublisher struct {
 	channel *amqp.Channel
 }
 
-// RabbitMQEventPayload defines exactly what message format RabbitMQ expects, isolated from Domain models.
 type RabbitMQEventPayload struct {
 	OrderID int64       `json:"order_id"`
 	UserID  string      `json:"user_id"`
 	Amount  int64       `json:"amount"` // Sent in cents
 	Status  string      `json:"status"`
-	Items   interface{} `json:"items"` // Maps neatly to domain Items slice, or we could define deeply strict structs
+	Items   interface{} `json:"items"`
 }
 
-// NewRabbitMQPublisher establishes connection and implements OrderEventPublisher.
 func NewRabbitMQPublisher(url string) (service.OrderEventPublisher, func(), error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
@@ -67,14 +65,13 @@ func NewRabbitMQPublisher(url string) (service.OrderEventPublisher, func(), erro
 	return pub, cleanup, nil
 }
 
-// PublishOrderCreated maps a domain Order into a RabbitMQ specific payload and publishes it.
 func (p *rabbitMQPublisher) PublishOrderCreated(order *models.Order) error {
 	payload := RabbitMQEventPayload{
 		OrderID: order.ID,
 		UserID:  order.UserID,
 		Amount:  order.TotalAmount,
 		Status:  order.Status,
-		Items:   order.Items, // We can directly serialize the pure go structs to JSON in the Adapter
+		Items:   order.Items,
 	}
 
 	body, err := json.Marshal(payload)

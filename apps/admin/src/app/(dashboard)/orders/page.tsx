@@ -1,5 +1,5 @@
 import { Order, columns } from "./columns";
-import { DataTable } from "../users/data-table"; // Reuse Datatable from users or shared component
+import { DataTable } from "../users/data-table";
 
 import { cookies } from "next/headers";
 

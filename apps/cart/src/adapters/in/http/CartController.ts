@@ -5,12 +5,9 @@ import { Cart, CartItem } from '../../../core/domain/Cart';
 export class CartController {
     constructor(private readonly cartService: CartService) {}
 
-    // Helper to get userId from header
     private getUserId(req: Request): string | undefined {
         return req.headers['x-user-id'] as string;
     }
-
-    // --- Header-based Routes (Preferred) ---
 
     public getCart = async (req: Request, res: Response) => {
         const userId = this.getUserId(req);
@@ -28,7 +25,6 @@ export class CartController {
         if (!userId) return res.status(401).json({ error: 'User ID missing in headers' });
         try {
             const itemRequest = req.body;
-            // Map the incoming float price (dollars) securely to integer (cents) for the domain
             const cartItem: CartItem = {
                 ...itemRequest,
                 price: Math.round(itemRequest.price * 100)
@@ -69,8 +65,6 @@ export class CartController {
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
-
-    // --- Parameter-based Routes (Legacy/Internal) ---
 
     public getCartParam = async (req: Request, res: Response) => {
         try {
@@ -114,10 +108,6 @@ export class CartController {
         }
     }
 
-    /**
-     * Maps the internal Cart domain model explicitly back to public contract expectations
-     * Transforming integer cents back to external float dollars.
-     */
     private mapToResponse(cart: Cart) {
         return {
             userId: cart.userId,

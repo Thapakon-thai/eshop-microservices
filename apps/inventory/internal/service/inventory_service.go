@@ -27,6 +27,5 @@ func (s *InventoryServiceImpl) UpdateStock(ctx context.Context, productID string
 		return nil, fmt.Errorf("invalid product ID")
 	}
 
-	// Repository handles atomic checks on stock dropping below zero.
 	return s.repo.UpdateStock(ctx, productID, change)
 }
