@@ -1,4 +1,9 @@
-import { PaymentFormInputs, paymentFormSchema, CartItemType, ShippingFormInputs } from "@/types";
+import {
+  PaymentFormInputs,
+  paymentFormSchema,
+  CartItemType,
+  ShippingFormInputs,
+} from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, CheckCircle2, Loader2, ShoppingCart } from "lucide-react";
 import Image from "next/image";
@@ -55,22 +60,26 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Calculate totals
-      const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+      const subtotal = cart.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0,
+      );
       const discount = subtotal * 0.1; // 10% discount
       const shippingFee = 10;
       const total = subtotal - discount + shippingFee;
 
       // Create order via API - Include pricing breakdown
+      // Backend expects int64 (cents), so convert dollar amounts to cents
       const token = Cookies.get("token");
       const orderPayload = {
         items: cart.map((item) => ({
           product_id: item.id,
           quantity: item.quantity,
-          price: item.price.toString(), // Backend expects decimal as string
+          price: Math.round(item.price * 100), // Convert to cents (int64)
         })),
-        subtotal: subtotal,
-        shipping_fee: shippingFee,
-        discount: discount,
+        subtotal: Math.round(subtotal * 100),
+        shipping_fee: Math.round(shippingFee * 100),
+        discount: Math.round(discount * 100),
       };
 
       const response = await fetch(`${apiBaseUrl}/order/orders`, {
@@ -108,8 +117,12 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
     return (
       <div className="flex flex-col items-center justify-center py-8 gap-4">
         <CheckCircle2 className="w-16 h-16 text-green-500" />
-        <h3 className="text-xl font-semibold text-green-700">Payment Successful!</h3>
-        <p className="text-gray-500 text-sm">Redirecting to your order confirmation...</p>
+        <h3 className="text-xl font-semibold text-green-700">
+          Payment Successful!
+        </h3>
+        <p className="text-gray-500 text-sm">
+          Redirecting to your order confirmation...
+        </p>
       </div>
     );
   }
@@ -124,7 +137,9 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
         <AlertCircle className="w-4 h-4 text-amber-600" />
         <div className="flex-1">
           <p className="text-xs text-amber-800 font-medium">Test Mode</p>
-          <p className="text-xs text-amber-600">Use test card for demo checkout</p>
+          <p className="text-xs text-amber-600">
+            Use test card for demo checkout
+          </p>
         </div>
         <button
           type="button"
@@ -136,7 +151,10 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="cardHolder" className="text-xs text-gray-500 font-medium">
+        <label
+          htmlFor="cardHolder"
+          className="text-xs text-gray-500 font-medium"
+        >
           Name on card
         </label>
         <input
@@ -152,7 +170,10 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
         )}
       </div>
       <div className="flex flex-col gap-1">
-        <label htmlFor="cardNumber" className="text-xs text-gray-500 font-medium">
+        <label
+          htmlFor="cardNumber"
+          className="text-xs text-gray-500 font-medium"
+        >
           Card Number
         </label>
         <input
@@ -169,7 +190,10 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
       </div>
       <div className="flex gap-4">
         <div className="flex flex-col gap-1 flex-1">
-          <label htmlFor="expirationDate" className="text-xs text-gray-500 font-medium">
+          <label
+            htmlFor="expirationDate"
+            className="text-xs text-gray-500 font-medium"
+          >
             Expiration Date
           </label>
           <input
@@ -181,7 +205,9 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
             {...register("expirationDate")}
           />
           {errors.expirationDate && (
-            <p className="text-xs text-red-500">{errors.expirationDate.message}</p>
+            <p className="text-xs text-red-500">
+              {errors.expirationDate.message}
+            </p>
           )}
         </div>
         <div className="flex flex-col gap-1 flex-1">
@@ -201,10 +227,28 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
           )}
         </div>
       </div>
-      <div className='flex items-center gap-2 mt-4'>
-        <Image src="/klarna.png" alt="klarna" width={50} height={25} className="rounded-md"/>
-        <Image src="/cards.png" alt="cards" width={50} height={25} className="rounded-md"/>
-        <Image src="/stripe.png" alt="stripe" width={50} height={25} className="rounded-md"/>
+      <div className="flex items-center gap-2 mt-4">
+        <Image
+          src="/klarna.png"
+          alt="klarna"
+          width={50}
+          height={25}
+          className="rounded-md"
+        />
+        <Image
+          src="/cards.png"
+          alt="cards"
+          width={50}
+          height={25}
+          className="rounded-md"
+        />
+        <Image
+          src="/stripe.png"
+          alt="stripe"
+          width={50}
+          height={25}
+          className="rounded-md"
+        />
       </div>
       <button
         type="submit"

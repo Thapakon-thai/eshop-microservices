@@ -7,21 +7,21 @@ import (
 
 // Order represents the core business entity for an order.
 type Order struct {
-	ID          int64       
-	UserID      string      
-	Subtotal    int64       
-	ShippingFee int64       
-	Discount    int64       
-	TotalAmount int64       
-	Status      string      
-	CreatedAt   time.Time   
-	UpdatedAt   time.Time   
-	Items       []OrderItem 
+	ID          int64       `json:"id"`
+	UserID      string      `json:"user_id"`
+	Subtotal    int64       `json:"subtotal"`
+	ShippingFee int64       `json:"shipping_fee"`
+	Discount    int64       `json:"discount"`
+	TotalAmount int64       `json:"total_amount"`
+	Status      string      `json:"status"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
+	Items       []OrderItem `json:"items"`
 }
 
 // OrderItem represents a single item in an order.
 type OrderItem struct {
-	ID        int64  
+	ID        int64  `json:"id"`
 	OrderID   int64  `json:"order_id"`
 	ProductID string `json:"product_id"`
 	Quantity  int    `json:"quantity"`
@@ -30,18 +30,18 @@ type OrderItem struct {
 
 // CreateOrderRequest is the domain request object for creating an order.
 type CreateOrderRequest struct {
-	UserID      string            
-	Items       []CreateOrderItem 
-	Subtotal    int64             
-	ShippingFee int64             
-	Discount    int64             
+	UserID      string            `json:"user_id"`
+	Items       []CreateOrderItem `json:"items"`
+	Subtotal    int64             `json:"subtotal"`
+	ShippingFee int64             `json:"shipping_fee"`
+	Discount    int64             `json:"discount"`
 }
 
 // CreateOrderItem is the domain request object for items within a new order.
 type CreateOrderItem struct {
-	ProductID string 
-	Quantity  int    
-	Price     int64  
+	ProductID string `json:"product_id"`
+	Quantity  int    `json:"quantity"`
+	Price     int64  `json:"price"`
 }
 
 func (req *CreateOrderRequest) Validate() error {

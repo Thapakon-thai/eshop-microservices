@@ -7,7 +7,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "./ui/chart";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Package } from "lucide-react";
 
 import type { Product } from "@/app/(dashboard)/products/columns";
 
@@ -35,7 +35,7 @@ const AppPieChart = ({ data }: { data: Product[] }) => {
     other: 0,
   };
 
-  data.forEach((product) => {
+  (data ?? []).forEach((product) => {
     const name = product.name.toLowerCase();
     if (name.includes("t-shirt") || name.includes("shirt"))
       categories["t-shirts"]++;
@@ -56,13 +56,17 @@ const AppPieChart = ({ data }: { data: Product[] }) => {
       fill: `var(--color-${category})`,
     }));
 
-  // If no data, provide a safe fallback so the chart doesn't crash
+  // If no data, show empty state instead of fake data
   if (chartData.length === 0) {
-    chartData.push({
-      browser: "other",
-      visitors: 1,
-      fill: "var(--color-other)",
-    });
+    return (
+      <div className="">
+        <h1 className="text-lg font-medium mb-6">Products by Category</h1>
+        <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+          <Package className="h-10 w-10 mb-2 opacity-50" />
+          <p className="text-sm">No products yet</p>
+        </div>
+      </div>
+    );
   }
 
   // If you don't use React compiler use useMemo hook to improve performance

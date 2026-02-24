@@ -93,7 +93,9 @@ const formSchema = z.object({
 
 const AddProduct = () => {
   // State to force file input reset after image deletion
-  const [fileInputKeys, setFileInputKeys] = useState<Record<string, number>>({});
+  const [fileInputKeys, setFileInputKeys] = useState<Record<string, number>>(
+    {},
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -101,8 +103,8 @@ const AddProduct = () => {
       images: {},
       sizes: [],
       colors: [],
-      stock: 100
-    }
+      stock: 100,
+    },
   });
 
   // Watch images for reactivity
@@ -111,47 +113,43 @@ const AddProduct = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       const payload = {
-         ...values,
-         category_id: values.category.toLowerCase(), // basic mapping
+        ...values,
+        category_id: values.category.toLowerCase(), // basic mapping
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/products`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       if (res.ok) {
         const createdProduct = await res.json();
-        
+
         // Auto-sync stock to inventory service
         if (createdProduct.id && values.stock > 0) {
           try {
-            const token = document.cookie
-              .split('; ')
-              .find(row => row.startsWith('access_token='))
-              ?.split('=')[1];
-            
-            if (token) {
-              await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/inventory/stock`, {
+            await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/inventory/stock`,
+              {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${token}`,
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   product_id: createdProduct.id,
                   quantity_change: values.stock,
                 }),
-              });
-            }
+              },
+            );
           } catch (stockError) {
             console.error("Failed to sync stock:", stockError);
           }
         }
-        
+
         alert("Product created successfully!");
         window.location.reload(); // Simple reload to refresh list
       } else {
@@ -171,7 +169,10 @@ const AddProduct = () => {
           <SheetTitle className="mb-4">Add Product</SheetTitle>
           <SheetDescription asChild>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
                 <FormField
                   control={form.control}
                   name="name"
@@ -188,7 +189,7 @@ const AddProduct = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="description"
@@ -219,7 +220,7 @@ const AddProduct = () => {
                       </FormItem>
                     )}
                   />
-                   <FormField
+                  <FormField
                     control={form.control}
                     name="stock"
                     render={({ field }) => (
@@ -241,7 +242,10 @@ const AddProduct = () => {
                     <FormItem>
                       <FormLabel>Category</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select a category" />
                           </SelectTrigger>
@@ -267,24 +271,27 @@ const AddProduct = () => {
                       <FormControl>
                         <div className="grid grid-cols-3 gap-4 my-2">
                           {sizes.map((size) => (
-                            <FormItem key={size} className="flex flex-row items-start space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(size)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...field.value, size])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== size
-                                            )
-                                          )
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal cursor-pointer">
-                                  {size}
-                                </FormLabel>
+                            <FormItem
+                              key={size}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(size)}
+                                  onCheckedChange={(checked) => {
+                                    return checked
+                                      ? field.onChange([...field.value, size])
+                                      : field.onChange(
+                                          field.value?.filter(
+                                            (value) => value !== size,
+                                          ),
+                                        );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">
+                                {size}
+                              </FormLabel>
                             </FormItem>
                           ))}
                         </div>
@@ -303,18 +310,24 @@ const AddProduct = () => {
                         <div className="space-y-4">
                           <div className="grid grid-cols-3 gap-4 my-2">
                             {colors.map((color) => (
-                              <FormItem key={color} className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormItem
+                                key={color}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
                                 <FormControl>
                                   <Checkbox
                                     checked={field.value?.includes(color)}
                                     onCheckedChange={(checked) => {
                                       return checked
-                                        ? field.onChange([...field.value, color])
+                                        ? field.onChange([
+                                            ...field.value,
+                                            color,
+                                          ])
                                         : field.onChange(
                                             field.value?.filter(
-                                              (value) => value !== color
-                                            )
-                                          )
+                                              (value) => value !== color,
+                                            ),
+                                          );
                                     }}
                                   />
                                 </FormControl>
@@ -331,18 +344,26 @@ const AddProduct = () => {
                           {/* Image Upload for selected colors */}
                           {field.value && field.value.length > 0 && (
                             <div className="mt-8 space-y-4 border-t pt-4">
-                              <p className="text-sm font-medium">Upload images for selected colors:</p>
+                              <p className="text-sm font-medium">
+                                Upload images for selected colors:
+                              </p>
                               {field.value.map((color) => {
-                                const currentImage = watchedImages?.[color] || "";
+                                const currentImage =
+                                  watchedImages?.[color] || "";
                                 const inputKey = fileInputKeys[color] || 0;
                                 return (
-                                  <div className="flex flex-col gap-2" key={color}>
+                                  <div
+                                    className="flex flex-col gap-2"
+                                    key={color}
+                                  >
                                     <div className="flex items-center gap-2">
                                       <div
                                         className="w-4 h-4 rounded-full border border-gray-300 shrink-0"
                                         style={{ backgroundColor: color }}
                                       />
-                                      <span className="text-sm font-medium capitalize min-w-[60px]">{color}</span>
+                                      <span className="text-sm font-medium capitalize min-w-[60px]">
+                                        {color}
+                                      </span>
                                     </div>
                                     {/* Image Preview */}
                                     {currentImage && (
@@ -355,12 +376,20 @@ const AddProduct = () => {
                                         <button
                                           type="button"
                                           onClick={() => {
-                                            const currentImages = form.getValues("images");
-                                            const updated = { ...currentImages };
+                                            const currentImages =
+                                              form.getValues("images");
+                                            const updated = {
+                                              ...currentImages,
+                                            };
                                             delete updated[color];
-                                            form.setValue("images", updated, { shouldValidate: true });
+                                            form.setValue("images", updated, {
+                                              shouldValidate: true,
+                                            });
                                             // Reset file input by changing its key
-                                            setFileInputKeys(prev => ({ ...prev, [color]: (prev[color] || 0) + 1 }));
+                                            setFileInputKeys((prev) => ({
+                                              ...prev,
+                                              [color]: (prev[color] || 0) + 1,
+                                            }));
                                           }}
                                           className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
                                         >
@@ -372,11 +401,23 @@ const AddProduct = () => {
                                     <div className="flex gap-2">
                                       <label className="flex-1 cursor-pointer">
                                         <div className="flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors">
-                                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                          <svg
+                                            className="w-4 h-4 text-gray-500"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={2}
+                                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                            />
                                           </svg>
                                           <span className="text-sm text-gray-600">
-                                            {currentImage ? "Change Image" : "Upload Image"}
+                                            {currentImage
+                                              ? "Change Image"
+                                              : "Upload Image"}
                                           </span>
                                         </div>
                                         <input
@@ -389,11 +430,17 @@ const AddProduct = () => {
                                             if (file) {
                                               const reader = new FileReader();
                                               reader.onloadend = () => {
-                                                const currentImages = form.getValues("images");
-                                                form.setValue("images", {
-                                                  ...currentImages,
-                                                  [color]: reader.result as string,
-                                                }, { shouldValidate: true });
+                                                const currentImages =
+                                                  form.getValues("images");
+                                                form.setValue(
+                                                  "images",
+                                                  {
+                                                    ...currentImages,
+                                                    [color]:
+                                                      reader.result as string,
+                                                  },
+                                                  { shouldValidate: true },
+                                                );
                                               };
                                               reader.readAsDataURL(file);
                                             }
@@ -402,16 +449,26 @@ const AddProduct = () => {
                                       </label>
                                     </div>
                                     {/* Or paste URL */}
-                                    <Input 
+                                    <Input
                                       className="text-xs"
                                       placeholder="Or paste image URL..."
-                                      value={(currentImage && !currentImage.startsWith("data:")) ? currentImage : ""}
+                                      value={
+                                        currentImage &&
+                                        !currentImage.startsWith("data:")
+                                          ? currentImage
+                                          : ""
+                                      }
                                       onChange={(e) => {
-                                        const currentImages = form.getValues("images");
-                                        form.setValue("images", {
-                                          ...currentImages,
-                                          [color]: e.target.value,
-                                        }, { shouldValidate: true });
+                                        const currentImages =
+                                          form.getValues("images");
+                                        form.setValue(
+                                          "images",
+                                          {
+                                            ...currentImages,
+                                            [color]: e.target.value,
+                                          },
+                                          { shouldValidate: true },
+                                        );
                                       }}
                                     />
                                   </div>

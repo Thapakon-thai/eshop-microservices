@@ -31,7 +31,7 @@ const AppBarChart = ({ data = [] }: { data: Payment[] }) => {
   const months = ["January", "February", "March", "April", "May", "June"];
   const chartData = months.map((month) => ({ month, total: 0, successful: 0 }));
 
-  data.forEach((payment, index) => {
+  (data ?? []).forEach((payment, index) => {
     // Distribute payments across the 6 buckets using modulo
     const bucket = index % 6;
     chartData[bucket].total += payment.amount;

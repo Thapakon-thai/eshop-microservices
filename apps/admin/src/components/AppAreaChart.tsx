@@ -52,7 +52,7 @@ const AppAreaChart = ({ data = [] }: { data: Order[] }) => {
 
   // For orders without dates, spread them out similarly or group under month 0.
   // We'll parse the date here.
-  data.forEach((order) => {
+  (data ?? []).forEach((order) => {
     let monthIndex = new Date().getMonth(); // default to current month
     if (order.created_at) {
       const d = new Date(order.created_at);
