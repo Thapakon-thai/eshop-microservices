@@ -92,7 +92,7 @@ app.use(
     target: process.env.PAYMENT_SERVICE_URL || "http://payment-service:5003",
     changeOrigin: true,
     pathRewrite: {
-      "^/payment": "", // remove base path
+      "^/payment": "/api/v1", // map /payment/* to /api/v1/*
     },
     onProxyReq: (proxyReq, req, res) => {
       // Explicitly set the header on the proxy request
@@ -152,6 +152,7 @@ app.get("/products", (req, res) => {
     {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 10,
+      category_id: req.query.category || "",
     },
     (err, response) => {
       if (err) return res.status(500).json({ error: err.message });

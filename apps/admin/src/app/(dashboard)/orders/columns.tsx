@@ -65,7 +65,7 @@ export const columns: ColumnDef<Order>[] = [
       );
     },
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("total_amount"));
+      const amount = parseFloat(row.getValue("total_amount")) / 100;
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -85,7 +85,7 @@ export const columns: ColumnDef<Order>[] = [
             status === "pending" && "bg-yellow-100 text-yellow-800",
             status === "success" && "bg-green-100 text-green-800",
             status === "paid" && "bg-green-100 text-green-800",
-            status === "failed" && "bg-red-100 text-red-800"
+            status === "failed" && "bg-red-100 text-red-800",
           )}
         >
           {status}
@@ -97,8 +97,8 @@ export const columns: ColumnDef<Order>[] = [
     accessorKey: "created_at",
     header: "Date",
     cell: ({ row }) => {
-        return new Date(row.getValue("created_at")).toLocaleDateString();
-    }
+      return new Date(row.getValue("created_at")).toLocaleDateString();
+    },
   },
   {
     id: "actions",

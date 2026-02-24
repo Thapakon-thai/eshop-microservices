@@ -64,3 +64,7 @@ func (s *paymentServiceImpl) GetUserPayments(ctx context.Context, userID string)
 	}
 	return s.repo.GetPaymentsByUserID(ctx, userID)
 }
+
+func (s *paymentServiceImpl) ListAllPayments(ctx context.Context) ([]*models.Payment, error) {
+	return s.repo.ListAllPayments(ctx)
+}

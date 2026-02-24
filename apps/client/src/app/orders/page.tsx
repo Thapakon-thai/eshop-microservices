@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import Cookies from "js-cookie";
 import { Package, Clock, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface OrderItem {
   id: number;
@@ -28,26 +29,29 @@ interface Order {
   items: OrderItem[];
 }
 
-const statusConfig: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
-  pending: { 
-    icon: <Clock className="w-4 h-4" />, 
-    color: "text-amber-600", 
-    bg: "bg-amber-50" 
+const statusConfig: Record<
+  string,
+  { icon: React.ReactNode; color: string; bg: string }
+> = {
+  pending: {
+    icon: <Clock className="w-4 h-4" />,
+    color: "text-amber-600",
+    bg: "bg-amber-50",
   },
-  processing: { 
-    icon: <Package className="w-4 h-4" />, 
-    color: "text-blue-600", 
-    bg: "bg-blue-50" 
+  processing: {
+    icon: <Package className="w-4 h-4" />,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
   },
-  completed: { 
-    icon: <CheckCircle className="w-4 h-4" />, 
-    color: "text-green-600", 
-    bg: "bg-green-50" 
+  completed: {
+    icon: <CheckCircle className="w-4 h-4" />,
+    color: "text-green-600",
+    bg: "bg-green-50",
   },
-  cancelled: { 
-    icon: <XCircle className="w-4 h-4" />, 
-    color: "text-red-600", 
-    bg: "bg-red-50" 
+  cancelled: {
+    icon: <XCircle className="w-4 h-4" />,
+    color: "text-red-600",
+    bg: "bg-red-50",
   },
 };
 
@@ -55,13 +59,17 @@ export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [productInfo, setProductInfo] = useState<
+    Record<string, { name: string; image: string }>
+  >({});
   const { isAuthenticated, checkAuth } = useAuthStore();
   const router = useRouter();
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   useEffect(() => {
     // Hydrate auth state from cookies
     checkAuth();
-    
+
     // Check token directly from cookies (more reliable than zustand on first mount)
     const token = Cookies.get("access_token") || Cookies.get("token");
     if (!token) {
@@ -77,12 +85,45 @@ export default function OrderHistoryPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (res.ok) {
           const data = await res.json();
           setOrders(data);
+
+          // Fetch product details for all unique product IDs
+          const productIds = new Set<string>();
+          data.forEach((order: Order) =>
+            order.items.forEach((item: OrderItem) =>
+              productIds.add(item.product_id),
+            ),
+          );
+
+          const productDetails: Record<
+            string,
+            { name: string; image: string }
+          > = {};
+          await Promise.all(
+            Array.from(productIds).map(async (pid) => {
+              try {
+                const pRes = await fetch(`${apiUrl}/products/${pid}`);
+                if (pRes.ok) {
+                  const product = await pRes.json();
+                  const firstImage = product.images
+                    ? (Object.values(product.images)[0] as string)
+                    : "";
+                  productDetails[pid] = {
+                    name: product.name || `Product ${pid.slice(-6)}`,
+                    image: firstImage || "",
+                  };
+                }
+              } catch {
+                // ignore, will fallback to default
+              }
+            }),
+          );
+          setProductInfo(productDetails);
         } else if (res.status === 401) {
           router.push("/auth/signin");
         } else {
@@ -168,9 +209,7 @@ export default function OrderHistoryPage() {
                   {/* Order Header */}
                   <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-500">
-                        Order #{order.id}
-                      </p>
+                      <p className="text-sm text-gray-500">Order #{order.id}</p>
                       <p className="text-xs text-gray-400">
                         {formatDate(order.created_at)}
                       </p>
@@ -194,47 +233,71 @@ export default function OrderHistoryPage() {
                           className="flex items-center justify-between text-sm"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <Package className="w-5 h-5 text-gray-400" />
-                            </div>
+                            {productInfo[item.product_id]?.image ? (
+                              <div className="w-10 h-10 relative rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                                <Image
+                                  src={productInfo[item.product_id].image}
+                                  alt={
+                                    productInfo[item.product_id]?.name ||
+                                    "Product"
+                                  }
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+                                <Package className="w-5 h-5 text-gray-400" />
+                              </div>
+                            )}
                             <div>
                               <p className="font-medium">
-                                Product {item.product_id.slice(-6)}
+                                {productInfo[item.product_id]?.name ||
+                                  `Product ${item.product_id.slice(-6)}`}
                               </p>
                               <p className="text-gray-500">
                                 Qty: {item.quantity}
                               </p>
                             </div>
                           </div>
-                          <p className="font-medium">${item.price}</p>
+                          <p className="font-medium">
+                            ${(Number(item.price) / 100).toFixed(2)}
+                          </p>
                         </div>
                       ))}
                     </div>
 
                     {/* Pricing Breakdown */}
                     <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
-                      {(order.subtotal > 0 || order.shipping_fee > 0 || order.discount > 0) ? (
+                      {order.subtotal > 0 ||
+                      order.shipping_fee > 0 ||
+                      order.discount > 0 ? (
                         <>
                           <div className="flex justify-between text-sm text-gray-500">
                             <span>Subtotal</span>
-                            <span>${order.subtotal?.toFixed(2) || "0.00"}</span>
+                            <span>
+                              ${(order.subtotal / 100)?.toFixed(2) || "0.00"}
+                            </span>
                           </div>
                           {order.discount > 0 && (
                             <div className="flex justify-between text-sm text-green-600">
                               <span>Discount</span>
-                              <span>-${order.discount.toFixed(2)}</span>
+                              <span>-${(order.discount / 100).toFixed(2)}</span>
                             </div>
                           )}
                           {order.shipping_fee > 0 && (
                             <div className="flex justify-between text-sm text-gray-500">
                               <span>Shipping</span>
-                              <span>${order.shipping_fee.toFixed(2)}</span>
+                              <span>
+                                ${(order.shipping_fee / 100).toFixed(2)}
+                              </span>
                             </div>
                           )}
                           <div className="flex justify-between pt-2 border-t border-gray-100">
                             <span className="font-semibold">Total</span>
                             <span className="text-lg font-bold">
-                              ${order.total_amount?.toFixed(2) || "0.00"}
+                              $
+                              {(order.total_amount / 100)?.toFixed(2) || "0.00"}
                             </span>
                           </div>
                         </>
@@ -242,7 +305,7 @@ export default function OrderHistoryPage() {
                         <div className="flex justify-between items-center">
                           <span className="text-gray-500">Total</span>
                           <span className="text-lg font-bold">
-                            ${order.total_amount?.toFixed(2) || "0.00"}
+                            ${(order.total_amount / 100)?.toFixed(2) || "0.00"}
                           </span>
                         </div>
                       )}

@@ -43,6 +43,7 @@ func RegisterRoutes(app *fiber.App, handler *PaymentHandler) {
 
 	api.Get("/health", HealthCheck)
 	api.Post("/payments", handler.CreatePayment)
+	api.Get("/payments", handler.ListAllPayments)
 	api.Get("/payments/user/:userID", handler.ListUserPayments)
 	api.Get("/payments/:id", handler.GetPayment)
 }
@@ -99,6 +100,20 @@ func (h *PaymentHandler) GetPayment(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(mapToResponse(payment))
+}
+
+func (h *PaymentHandler) ListAllPayments(c *fiber.Ctx) error {
+	payments, err := h.service.ListAllPayments(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	responses := make([]PaymentResponse, len(payments))
+	for i, p := range payments {
+		responses[i] = mapToResponse(p)
+	}
+
+	return c.JSON(responses)
 }
 
 func mapToResponse(domain *models.Payment) PaymentResponse {

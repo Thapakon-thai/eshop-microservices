@@ -6,9 +6,9 @@ const ProductsPage = async ({
   searchParams: Promise<{ category: string }>;
 }) => {
   const category = (await searchParams).category;
-  
+
   let url = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/products?limit=20`;
-  if (category) {
+  if (category && category !== "all") {
     url += `&category=${category}`;
   }
 
@@ -20,7 +20,7 @@ const ProductsPage = async ({
 
   return (
     <div className="">
-      <ProductList category={category} params="products" products={products}/>
+      <ProductList category={category} params="products" products={products} />
     </div>
   );
 };

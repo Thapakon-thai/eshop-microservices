@@ -75,6 +75,19 @@ func (r *postgresPaymentRepository) UpdatePaymentStatus(ctx context.Context, id 
 	return nil
 }
 
+func (r *postgresPaymentRepository) ListAllPayments(ctx context.Context) ([]*models.Payment, error) {
+	var dbModels []PaymentDBModel
+	if err := r.db.WithContext(ctx).Order("created_at DESC").Find(&dbModels).Error; err != nil {
+		return nil, err
+	}
+
+	var payments []*models.Payment
+	for _, dbM := range dbModels {
+		payments = append(payments, toDomainModel(&dbM))
+	}
+	return payments, nil
+}
+
 func toDBModel(domain *models.Payment) *PaymentDBModel {
 	return &PaymentDBModel{
 		ID:        domain.ID,
