@@ -2,41 +2,43 @@ package models
 
 import (
 	"time"
-
-	"github.com/shopspring/decimal"
 )
 
+// Order represents the core business entity for an order.
 type Order struct {
-	ID          int64       `json:"id" gorm:"primaryKey"`
-	UserID      string      `json:"user_id"`
-	Subtotal    float64     `json:"subtotal"`
-	ShippingFee float64     `json:"shipping_fee"`
-	Discount    float64     `json:"discount"`
-	TotalAmount float64     `json:"total_amount"`
-	Status      string      `json:"status"` // e.g., "pending", "paid", "shipped"
-	CreatedAt   time.Time   `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt   time.Time   `json:"updated_at" gorm:"autoUpdateTime"`
-	Items       []OrderItem `json:"items,omitempty" gorm:"foreignKey:OrderID"`
+	ID          int64
+	UserID      string
+	Subtotal    float64
+	ShippingFee float64
+	Discount    float64
+	TotalAmount float64
+	Status      string // e.g., "pending", "paid", "shipped"
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Items       []OrderItem
 }
 
+// OrderItem represents a single item in an order.
 type OrderItem struct {
-	ID        int64           `json:"id" gorm:"primaryKey"`
-	OrderID   int64           `json:"order_id"`
-	ProductID string          `json:"product_id"`
-	Quantity  int             `json:"quantity"`
-	Price     decimal.Decimal `json:"price"`
+	ID        int64
+	OrderID   int64
+	ProductID string
+	Quantity  int
+	Price     float64
 }
 
+// CreateOrderRequest is the domain request object for creating an order.
 type CreateOrderRequest struct {
-	UserID      string            `json:"user_id"`
-	Items       []CreateOrderItem `json:"items"`
-	Subtotal    float64           `json:"subtotal"`
-	ShippingFee float64           `json:"shipping_fee"`
-	Discount    float64           `json:"discount"`
+	UserID      string
+	Items       []CreateOrderItem
+	Subtotal    float64
+	ShippingFee float64
+	Discount    float64
 }
 
+// CreateOrderItem is the domain request object for items within a new order.
 type CreateOrderItem struct {
-	ProductID string          `json:"product_id"`
-	Quantity  int             `json:"quantity"`
-	Price     decimal.Decimal `json:"price"`
+	ProductID string
+	Quantity  int
+	Price     float64
 }

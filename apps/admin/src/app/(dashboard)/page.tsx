@@ -38,23 +38,18 @@ const Homepage = async () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6 p-4">
-      {/* Row 1 */}
       <div className="bg-card text-card-foreground p-6 rounded-3xl border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 lg:col-span-2 2xl:col-span-2">
         <AppBarChart data={payments} />
       </div>
-      <div className="bg-card text-card-foreground p-6 rounded-3xl border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 lg:col-span-2 2xl:col-span-1 flex justify-center items-center">
-        <AppPieChart data={products} />
+      <div className="bg-card text-card-foreground p-6 rounded-3xl border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+        <CardList title="Latest Transactions" data={payments} />
       </div>
-
-      {/* Row 2 */}
       <div className="bg-card text-card-foreground p-6 rounded-3xl border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 lg:col-span-2 2xl:col-span-2 flex justify-center items-center">
         <AppAreaChart data={orders} />
       </div>
-      <div className="bg-card text-card-foreground p-6 rounded-3xl border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 lg:col-span-2 2xl:col-span-1">
-        <CardList title="Latest Transactions" data={payments} />
+      <div className="bg-card text-card-foreground p-6 rounded-3xl border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+        <AppPieChart data={products} />
       </div>
-
-      {/* Row 3 */}
       <div className="bg-card text-card-foreground p-6 rounded-3xl border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 lg:col-span-2 2xl:col-span-3">
         <CardList title="Popular Products" data={products} />
       </div>

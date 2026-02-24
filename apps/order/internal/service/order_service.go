@@ -4,33 +4,30 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
-	"github.com/shopspring/decimal"
-	"github.com/thapakon-thai/eshop-microservices/order/internal/infrastructure"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/models"
-	"github.com/thapakon-thai/eshop-microservices/order/internal/repository"
-	invPb "github.com/thapakon-thai/eshop-microservices/proto/inventory"
-	pb "github.com/thapakon-thai/eshop-microservices/proto/product"
 )
 
-type OrderService interface {
-	CreateOrder(ctx context.Context, req *models.CreateOrderRequest) (*models.Order, error)
-	GetOrders(ctx context.Context, id string) (*models.Order, error)
-	ListOrders(ctx context.Context) ([]*models.Order, error)
-}
-
 type OrderServiceImpl struct {
-	repo        repository.OrderRepo
-	grpcClients *infrastructure.GrpcClients
-	publisher   *infrastructure.EventPublisher
+	repo            OrderRepository
+	productClient   ProductServiceClient
+	inventoryClient InventoryServiceClient
+	publisher       OrderEventPublisher
 }
 
 // constructor
-func NewOrderService(repo repository.OrderRepo, grpcClients *infrastructure.GrpcClients, publisher *infrastructure.EventPublisher) *OrderServiceImpl {
+func NewOrderService(
+	repo OrderRepository,
+	productClient ProductServiceClient,
+	inventoryClient InventoryServiceClient,
+	publisher OrderEventPublisher,
+) *OrderServiceImpl {
 	return &OrderServiceImpl{
-		repo:        repo,
-		grpcClients: grpcClients,
-		publisher:   publisher,
+		repo:            repo,
+		productClient:   productClient,
+		inventoryClient: inventoryClient,
+		publisher:       publisher,
 	}
 }
 
@@ -39,40 +36,41 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 		return nil, errors.New("items cannot be empty")
 	}
 
-	var totalAmount decimal.Decimal
+	var totalAmount float64
 	var orderItems []models.OrderItem
 
 	// Validate Products and Check/Deduct Stock
 	for _, itemReq := range req.Items {
-		// 1. Get Product Details
-		productRes, err := s.grpcClients.ProductClient.GetProduct(ctx, &pb.GetProductRequest{Id: itemReq.ProductID})
+		// 1. Get Product Details from Port
+		productRes, err := s.productClient.GetProduct(ctx, itemReq.ProductID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get product %s: %v", itemReq.ProductID, err)
+			// If Adapter mapped to domain error, return it.
+			if errors.Is(err, ErrProductNotFound) {
+				return nil, err
+			}
+			return nil, fmt.Errorf("failed to get product %s: %w", itemReq.ProductID, err)
 		}
 
-		// Validate Price
-		price := decimal.NewFromFloat(productRes.Price)
+		price := productRes.Price
 
-		// 2. Check Stock
-		stockRes, err := s.grpcClients.InventoryClient.GetStock(ctx, &invPb.GetStockRequest{ProductId: itemReq.ProductID})
+		// 2. Check Stock via Port
+		stockQty, err := s.inventoryClient.CheckStock(ctx, itemReq.ProductID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to check stock for %s: %v", itemReq.ProductID, err)
+			return nil, fmt.Errorf("failed to check stock for %s: %w", itemReq.ProductID, err)
 		}
-		if stockRes.Quantity < int32(itemReq.Quantity) {
-			return nil, fmt.Errorf("insufficient stock for product %s", itemReq.ProductID)
+		if stockQty < int32(itemReq.Quantity) {
+			return nil, fmt.Errorf("%w for product %s", ErrInventoryShortage, itemReq.ProductID)
 		}
 
-		// 3. Deduct Stock
-		_, err = s.grpcClients.InventoryClient.UpdateStock(ctx, &invPb.UpdateStockRequest{
-			ProductId:      itemReq.ProductID,
-			QuantityChange: -int32(itemReq.Quantity),
-		})
+		// 3. Deduct Stock via Port
+		err = s.inventoryClient.DeductStock(ctx, itemReq.ProductID, int32(itemReq.Quantity))
 		if err != nil {
-			// In a real system, we'd need to rollback previous deductions here!
-			return nil, fmt.Errorf("failed to deduct stock for %s: %v", itemReq.ProductID, err)
+			// In a real system, we'd need to rollback previous deductions here / implement saga.
+			return nil, fmt.Errorf("failed to deduct stock for %s: %w", itemReq.ProductID, err)
 		}
 
-		totalAmount = totalAmount.Add(price.Mul(decimal.NewFromInt(int64(itemReq.Quantity))))
+		totalAmount += price * float64(itemReq.Quantity)
+
 		orderItems = append(orderItems, models.OrderItem{
 			ProductID: itemReq.ProductID,
 			Quantity:  itemReq.Quantity,
@@ -83,7 +81,7 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 	// Use provided subtotal if available, otherwise use calculated amount
 	subtotal := req.Subtotal
 	if subtotal == 0 {
-		subtotal = totalAmount.InexactFloat64()
+		subtotal = totalAmount
 	}
 
 	// Calculate final total: subtotal + shipping - discount
@@ -102,28 +100,29 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 
 	err := s.repo.CreateOrder(ctx, order)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create order: %v", err)
+		return nil, fmt.Errorf("failed to create order: %w", err)
 	}
 
-	// Publish Event
-	event := map[string]interface{}{
-		"order_id": order.ID,
-		"user_id":  order.UserID,
-		"amount":   order.TotalAmount,
-		"status":   order.Status,
-		"items":    order.Items,
-	}
-	if err := s.publisher.PublishOrderCreated(event); err != nil {
-		fmt.Printf("Failed to publish order created event: %v\n", err)
+	// Publish Event via Port
+	if err := s.publisher.PublishOrderCreated(order); err != nil {
+		log.Printf("Failed to publish order created event: %v\n", err)
 	}
 
 	return order, nil
 }
 
 func (s *OrderServiceImpl) GetOrders(ctx context.Context, id string) (*models.Order, error) {
-	return s.repo.GetOrders(ctx, id)
+	order, err := s.repo.GetOrders(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get order: %w", err)
+	}
+	return order, nil
 }
 
 func (s *OrderServiceImpl) ListOrders(ctx context.Context) ([]*models.Order, error) {
-	return s.repo.ListOrders(ctx)
+	orders, err := s.repo.ListOrders(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list orders: %w", err)
+	}
+	return orders, nil
 }

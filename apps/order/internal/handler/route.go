@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/models"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/service"
@@ -42,6 +44,10 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 
 	order, err := h.service.CreateOrder(c.Context(), &req)
 	if err != nil {
+		// Map domain-specific errors to HTTP statuses
+		if errors.Is(err, service.ErrInventoryShortage) || errors.Is(err, service.ErrProductNotFound) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
@@ -56,6 +62,9 @@ func (h *OrderHandler) GetOrders(c *fiber.Ctx) error {
 
 	order, err := h.service.GetOrders(c.Context(), id)
 	if err != nil {
+		if errors.Is(err, service.ErrOrderNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
