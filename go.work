@@ -1,8 +1,9 @@
-go 1.25.4
+go 1.25.6
 
 use (
+	./apps/inventory
 	./apps/order
+	./apps/payment
 	./apps/product
 	./packages/proto
-	./apps/inventory
 )

@@ -2,7 +2,7 @@
   "name": "payment-service",
   "version": "1.0.0",
   "scripts": {
-    "build": "mvn clean package -DskipTests",
-    "dev": "set -a && . ./.env && set +a && mvn spring-boot:run"
+    "build": "go build -o main cmd/api/main.go",
+    "dev": "go run cmd/api/main.go"
   }
 }

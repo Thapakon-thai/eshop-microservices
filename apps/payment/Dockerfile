@@ -1,13 +1,19 @@
-# Build Stage
-FROM maven:3.9.6-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline
-COPY src ./src
-RUN mvn clean package -DskipTests
+FROM golang:1.24-alpine AS builder
 
-# Run Stage
-FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Copy the entire workspace context
+COPY . .
+
+# Build the payment service
+RUN go build -o payment-service apps/payment/cmd/api/main.go
+
+# Final stage
+FROM alpine:latest
+
+WORKDIR /app
+COPY --from=builder /app/payment-service .
+
+EXPOSE 5003
+
+CMD ["./payment-service"]
