@@ -126,3 +126,14 @@ func (s *OrderServiceImpl) ListOrders(ctx context.Context) ([]*models.Order, err
 	}
 	return orders, nil
 }
+
+func (s *OrderServiceImpl) UpdateOrderStatus(ctx context.Context, id string, status string) error {
+	validStatuses := map[string]bool{
+		"pending": true, "paid": true, "processing": true,
+		"completed": true, "cancelled": true, "failed": true,
+	}
+	if !validStatuses[status] {
+		return fmt.Errorf("invalid order status: %s", status)
+	}
+	return s.repo.UpdateOrderStatus(ctx, id, status)
+}

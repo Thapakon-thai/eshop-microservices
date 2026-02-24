@@ -98,10 +98,52 @@ const PaymentForm = ({ cart, shippingForm }: PaymentFormProps) => {
 
       const orderResult = await response.json();
 
+      // Process Payment via Payment Service
+      // We use the created order's ID.
+      const paymentPayload = {
+        order_id: orderResult.id.toString(),
+        user_id: shippingForm.email, // using email as user identifier for now
+        full_name: data.cardHolder || shippingForm.name,
+        email: shippingForm.email,
+        amount: total, // Payment service receives dollars and converts to cents internally
+      };
+
+      const paymentResponse = await fetch(`${apiBaseUrl}/payment/payments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(paymentPayload),
+      });
+
+      if (!paymentResponse.ok) {
+        const errorData = await paymentResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || "Payment processing failed");
+      }
+
+      // Update Order Status to 'paid'
+      const statusResponse = await fetch(
+        `${apiBaseUrl}/order/orders/${orderResult.id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: "paid" }),
+        },
+      );
+
+      if (!statusResponse.ok) {
+        // Payment succeeded but status update failed - log it
+        console.error("Failed to update order status to paid");
+      }
+
       // Success!
       setIsSuccess(true);
       clearCart();
-      toast.success("Order placed successfully!");
+      toast.success("Payment successful and order placed!");
 
       // Redirect to success page after a moment
       setTimeout(() => {

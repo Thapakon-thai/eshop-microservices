@@ -11,6 +11,7 @@ type OrderService interface {
 	CreateOrder(ctx context.Context, req *models.CreateOrderRequest) (*models.Order, error)
 	GetOrders(ctx context.Context, id string) (*models.Order, error)
 	ListOrders(ctx context.Context) ([]*models.Order, error)
+	UpdateOrderStatus(ctx context.Context, id string, status string) error
 }
 
 // OrderRepository is a Secondary Port (Driven Port) for the Database.
@@ -18,6 +19,7 @@ type OrderRepository interface {
 	CreateOrder(ctx context.Context, order *models.Order) error
 	GetOrders(ctx context.Context, id string) (*models.Order, error)
 	ListOrders(ctx context.Context) ([]*models.Order, error)
+	UpdateOrderStatus(ctx context.Context, id string, status string) error
 }
 
 // Product representation for the Application / Domain Layer

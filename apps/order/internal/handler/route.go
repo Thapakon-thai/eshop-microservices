@@ -23,6 +23,7 @@ func RegisterRoutes(app *fiber.App, handler *OrderHandler) {
 	api.Post("/orders", handler.CreateOrder)
 	api.Get("/orders", handler.ListOrders)
 	api.Get("/orders/:id", handler.GetOrders)
+	api.Patch("/orders/:id/status", handler.UpdateOrderStatus)
 }
 
 func HealthCheck(c *fiber.Ctx) error {
@@ -78,4 +79,27 @@ func (h *OrderHandler) ListOrders(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(orders)
+}
+
+func (h *OrderHandler) UpdateOrderStatus(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Order ID is required"})
+	}
+
+	var body struct {
+		Status string `json:"status"`
+	}
+	if err := c.BodyParser(&body); err != nil || body.Status == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Status is required"})
+	}
+
+	if err := h.service.UpdateOrderStatus(c.Context(), id, body.Status); err != nil {
+		if errors.Is(err, service.ErrOrderNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"message": "Order status updated"})
 }

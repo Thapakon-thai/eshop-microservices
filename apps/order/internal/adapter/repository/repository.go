@@ -92,6 +92,17 @@ func (r *postgresqlOrderRepo) ListOrders(ctx context.Context) ([]*models.Order, 
 	return orders, nil
 }
 
+func (r *postgresqlOrderRepo) UpdateOrderStatus(ctx context.Context, id string, status string) error {
+	result := r.db.WithContext(ctx).Model(&OrderDBModel{}).Where("id = ?", id).Update("status", status)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return service.ErrOrderNotFound
+	}
+	return nil
+}
+
 // --- Mapping Functions ---
 
 func toDBModel(domain *models.Order) OrderDBModel {
