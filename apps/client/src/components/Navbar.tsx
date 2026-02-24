@@ -4,6 +4,7 @@ import SearchBar from "./SearchBar";
 import { Bell, Home, ShoppingCart } from "lucide-react";
 import ShoppingCartIcon from "./ShoppingCartIcon";
 import { UserNav } from "./UserNav";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 const Navbar = () => {
   return (
@@ -32,9 +33,7 @@ const Navbar = () => {
         >
           <Home className="w-5 h-5 text-gray-700 dark:text-gray-300 transition-transform hover:scale-110" />
         </Link>
-        <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
-          <Bell className="w-5 h-5 text-gray-700 dark:text-gray-300 transition-transform hover:scale-110" />
-        </button>
+        <NotificationDropdown />
         <ShoppingCartIcon />
         <UserNav />
       </div>

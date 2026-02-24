@@ -135,5 +135,20 @@ func (s *OrderServiceImpl) UpdateOrderStatus(ctx context.Context, id string, sta
 	if !validStatuses[status] {
 		return fmt.Errorf("invalid order status: %s", status)
 	}
-	return s.repo.UpdateOrderStatus(ctx, id, status)
+	err := s.repo.UpdateOrderStatus(ctx, id, status)
+	if err != nil {
+		return err
+	}
+
+	// Fetch the updated order and publish an event
+	order, err := s.repo.GetOrders(ctx, id)
+	if err == nil {
+		if pubErr := s.publisher.PublishOrderStatusUpdated(order); pubErr != nil {
+			log.Printf("Failed to publish order status updated event: %v\n", pubErr)
+		}
+	} else {
+		log.Printf("Failed to fetch order to publish update event: %v\n", err)
+	}
+
+	return nil
 }

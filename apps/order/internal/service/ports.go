@@ -42,4 +42,5 @@ type InventoryServiceClient interface {
 // OrderEventPublisher is a Secondary Port for publishing order events to the Message Broker.
 type OrderEventPublisher interface {
 	PublishOrderCreated(order *models.Order) error
+	PublishOrderStatusUpdated(order *models.Order) error
 }

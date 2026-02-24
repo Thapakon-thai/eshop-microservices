@@ -103,6 +103,24 @@ app.use(
   }),
 );
 
+// Notification Service Proxy
+app.use(
+  "/notification",
+  checkAuth,
+  createProxyMiddleware({
+    target: process.env.NOTIFICATION_SERVICE_URL || "http://notification-service:5004",
+    changeOrigin: true,
+    pathRewrite: {
+      "^/notification": "/api/v1", // map /notification/* to /api/v1/*
+    },
+    onProxyReq: (proxyReq, req, res) => {
+      if (req.headers["x-user-id"]) {
+        proxyReq.setHeader("x-user-id", req.headers["x-user-id"]);
+      }
+    },
+  })
+);
+
 /**
  * GATEWAY ROUTES
  */

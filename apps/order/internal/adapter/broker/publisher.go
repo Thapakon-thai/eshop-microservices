@@ -101,3 +101,38 @@ func (p *rabbitMQPublisher) PublishOrderCreated(order *models.Order) error {
 	log.Printf(" [x] Sent Order Created: %s", body)
 	return nil
 }
+
+// PublishOrderStatusUpdated maps a domain Order into a RabbitMQ specific payload and publishes an update event.
+func (p *rabbitMQPublisher) PublishOrderStatusUpdated(order *models.Order) error {
+	payload := RabbitMQEventPayload{
+		OrderID: order.ID,
+		UserID:  order.UserID,
+		Amount:  order.TotalAmount,
+		Status:  order.Status,
+		Items:   order.Items,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal order updated payload: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err = p.channel.PublishWithContext(ctx,
+		"order_events",  // exchange
+		"order.updated", // routing key
+		false,           // mandatory
+		false,           // immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        body,
+		})
+	if err != nil {
+		return fmt.Errorf("failed to publish status update message: %w", err)
+	}
+
+	log.Printf(" [x] Sent Order Status Updated: %s", body)
+	return nil
+}

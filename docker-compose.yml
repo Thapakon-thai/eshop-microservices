@@ -189,8 +189,12 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      mongo:
+        condition: service_started
     environment:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/
+      - MONGODB_URI=mongodb://mongo:27017/notification_db
+      - PORT=5004
     networks:
       - ecommerce-network
 
