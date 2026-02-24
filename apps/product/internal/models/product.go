@@ -1,15 +1,30 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import "errors"
 
+// Product represents the pure business entity for a product.
 type Product struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Name        string             `bson:"name" json:"name"`
-	Description string             `bson:"description" json:"description"`
-	Price       float64            `bson:"price" json:"price"`
-	Stock       int32              `bson:"stock" json:"stock"`
-	CategoryID  string             `bson:"category_id" json:"category_id"`
-	Sizes       []string           `bson:"sizes" json:"sizes"`
-	Colors      []string           `bson:"colors" json:"colors"`
-	Images      map[string]string  `bson:"images" json:"images"`
+	ID          string // MongoDB Adapter will map this to/from ObjectID
+	Name        string
+	Description string
+	Price       int64 // Stored in Cents (e.g. 1000 = $10.00)
+	Stock       int32
+	CategoryID  string
+	Sizes       []string
+	Colors      []string
+	Images      map[string]string
+}
+
+// Validate ensures the Product adheres to business rules.
+func (p *Product) Validate() error {
+	if p.Name == "" {
+		return errors.New("product name cannot be empty")
+	}
+	if p.Price < 0 {
+		return errors.New("product price cannot be negative")
+	}
+	if p.Stock < 0 {
+		return errors.New("product stock cannot be negative")
+	}
+	return nil
 }

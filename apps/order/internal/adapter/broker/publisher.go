@@ -21,7 +21,7 @@ type rabbitMQPublisher struct {
 type RabbitMQEventPayload struct {
 	OrderID int64       `json:"order_id"`
 	UserID  string      `json:"user_id"`
-	Amount  float64     `json:"amount"`
+	Amount  int64       `json:"amount"` // Sent in cents
 	Status  string      `json:"status"`
 	Items   interface{} `json:"items"` // Maps neatly to domain Items slice, or we could define deeply strict structs
 }

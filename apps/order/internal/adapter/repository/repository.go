@@ -14,10 +14,10 @@ import (
 type OrderDBModel struct {
 	ID          int64 `gorm:"primaryKey"`
 	UserID      string
-	Subtotal    float64
-	ShippingFee float64
-	Discount    float64
-	TotalAmount float64
+	Subtotal    int64
+	ShippingFee int64
+	Discount    int64
+	TotalAmount int64
 	Status      string
 	CreatedAt   time.Time          `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time          `gorm:"autoUpdateTime"`
@@ -34,7 +34,7 @@ type OrderItemDBModel struct {
 	OrderID   int64
 	ProductID string
 	Quantity  int
-	Price     float64
+	Price     int64
 }
 
 func (OrderItemDBModel) TableName() string {

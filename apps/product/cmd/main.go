@@ -9,10 +9,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/thapakon-thai/eshop-microservices/product/internal/adapter/repository"
 	"github.com/thapakon-thai/eshop-microservices/product/internal/config"
 	"github.com/thapakon-thai/eshop-microservices/product/internal/handler"
 	"github.com/thapakon-thai/eshop-microservices/product/internal/infrastructure/db"
-	"github.com/thapakon-thai/eshop-microservices/product/internal/repository"
 	"github.com/thapakon-thai/eshop-microservices/product/internal/service"
 	pb "github.com/thapakon-thai/eshop-microservices/proto/product"
 	"google.golang.org/grpc"

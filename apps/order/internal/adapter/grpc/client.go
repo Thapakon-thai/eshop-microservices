@@ -34,10 +34,10 @@ func (c *productGrpcClient) GetProduct(ctx context.Context, id string) (*service
 		}
 		return nil, err
 	}
-	// Map Proto response to Domain struct
+	// Map Proto response to Domain struct, converting from dollars (float64) to cents (int64)
 	return &service.Product{
 		ID:    res.Id,
-		Price: res.Price,
+		Price: int64(res.Price * 100),
 	}, nil
 }
 

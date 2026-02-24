@@ -23,7 +23,7 @@ type OrderRepository interface {
 // Product representation for the Application / Domain Layer
 type Product struct {
 	ID    string
-	Price float64
+	Price int64
 }
 
 // ProductServiceClient is a Secondary Port for communicating with the Product Service.

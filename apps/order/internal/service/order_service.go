@@ -32,11 +32,11 @@ func NewOrderService(
 }
 
 func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOrderRequest) (*models.Order, error) {
-	if len(req.Items) == 0 {
-		return nil, errors.New("items cannot be empty")
+	if err := req.Validate(); err != nil {
+		return nil, err
 	}
 
-	var totalAmount float64
+	var totalAmount int64
 	var orderItems []models.OrderItem
 
 	// Validate Products and Check/Deduct Stock
@@ -69,7 +69,7 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *models.CreateOr
 			return nil, fmt.Errorf("failed to deduct stock for %s: %w", itemReq.ProductID, err)
 		}
 
-		totalAmount += price * float64(itemReq.Quantity)
+		totalAmount += price * int64(itemReq.Quantity)
 
 		orderItems = append(orderItems, models.OrderItem{
 			ProductID: itemReq.ProductID,

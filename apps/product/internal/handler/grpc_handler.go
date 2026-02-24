@@ -10,10 +10,10 @@ import (
 
 type ProductGrpcHandler struct {
 	pb.UnimplementedProductServiceServer
-	svc *service.ProductService
+	svc service.ProductService // Depending on port interface
 }
 
-func NewProductGrpcHandler(svc *service.ProductService) *ProductGrpcHandler {
+func NewProductGrpcHandler(svc service.ProductService) *ProductGrpcHandler {
 	return &ProductGrpcHandler{svc: svc}
 }
 
@@ -23,10 +23,10 @@ func (h *ProductGrpcHandler) GetProduct(ctx context.Context, req *pb.GetProductR
 		return nil, err
 	}
 	return &pb.ProductResponse{
-		Id:          product.ID.Hex(),
+		Id:          product.ID,
 		Name:        product.Name,
 		Description: product.Description,
-		Price:       product.Price,
+		Price:       float64(product.Price) / 100.0, // Domain int64 (cents) to proto double (dollars)
 		Stock:       product.Stock,
 		CategoryId:  product.CategoryID,
 		Sizes:       product.Sizes,
@@ -44,10 +44,10 @@ func (h *ProductGrpcHandler) ListProducts(ctx context.Context, req *pb.ListProdu
 	var pbProducts []*pb.ProductResponse
 	for _, p := range products {
 		pbProducts = append(pbProducts, &pb.ProductResponse{
-			Id:          p.ID.Hex(),
+			Id:          p.ID,
 			Name:        p.Name,
 			Description: p.Description,
-			Price:       p.Price,
+			Price:       float64(p.Price) / 100.0, // Domain int64 (cents) to proto double
 			Stock:       p.Stock,
 			CategoryId:  p.CategoryID,
 			Sizes:       p.Sizes,
@@ -66,7 +66,7 @@ func (h *ProductGrpcHandler) CreateProduct(ctx context.Context, req *pb.CreatePr
 	product := &models.Product{
 		Name:        req.Name,
 		Description: req.Description,
-		Price:       req.Price,
+		Price:       int64(req.Price * 100), // proto double (dollars) to Domain int64 (cents)
 		Stock:       req.Stock,
 		CategoryID:  req.CategoryId,
 		Sizes:       req.Sizes,
@@ -79,10 +79,10 @@ func (h *ProductGrpcHandler) CreateProduct(ctx context.Context, req *pb.CreatePr
 	}
 
 	return &pb.ProductResponse{
-		Id:          product.ID.Hex(),
+		Id:          product.ID,
 		Name:        product.Name,
 		Description: product.Description,
-		Price:       product.Price,
+		Price:       float64(product.Price) / 100.0,
 		Stock:       product.Stock,
 		CategoryId:  product.CategoryID,
 		Sizes:       product.Sizes,
