@@ -1,10 +1,7 @@
 package handler
 
 import (
-	"encoding/json"
-	"net/http"
-
-	"github.com/go-chi/chi/v5"
+	"github.com/gofiber/fiber/v2"
 	"github.com/thapakon-thai/eshop-microservices/payment/internal/service"
 )
 
@@ -16,60 +13,49 @@ func NewPaymentHandler(svc service.PaymentService) *PaymentHandler {
 	return &PaymentHandler{service: svc}
 }
 
-func Route(handler *PaymentHandler) chi.Router {
-	r := chi.NewRouter()
+func RegisterRoutes(app *fiber.App, handler *PaymentHandler) {
+	api := app.Group("/api/v1") // Adding versioning as a best practice
 
-	r.Get("/health", HealthCheck)
-	r.Get("/payments", handler.ListPayments)
-	r.Get("/payments/user/{userID}", handler.ListUserPayments)
-	r.Get("/payments/{id}", handler.GetPayment)
-	
-	return r
+	api.Get("/health", HealthCheck)
+	api.Get("/payments", handler.ListPayments)
+	api.Get("/payments/user/:userID", handler.ListUserPayments)
+	api.Get("/payments/:id", handler.GetPayment)
 }
 
-func HealthCheck(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Payment Service (Go) is healthy"))
+func HealthCheck(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusOK).SendString("Payment Service (Go/Fiber) is healthy")
 }
 
-func (h *PaymentHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
-	// For now, returning empty list or something generic as the Java one did
-	// ListPayments is not implemented in service yet, but let's just return empty for compatibility
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode([]interface{}{})
+func (h *PaymentHandler) ListPayments(c *fiber.Ctx) error {
+	// For compatibility with previous implementation returning empty list
+	return c.JSON([]interface{}{})
 }
 
-func (h *PaymentHandler) ListUserPayments(w http.ResponseWriter, r *http.Request) {
-	userID := chi.URLParam(r, "userID")
+func (h *PaymentHandler) ListUserPayments(c *fiber.Ctx) error {
+	userID := c.Params("userID")
 	if userID == "" {
-		http.Error(w, "User ID is required", http.StatusBadRequest)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "User ID is required"})
 	}
 
-	payments, err := h.service.GetUserPayments(r.Context(), userID)
+	payments, err := h.service.GetUserPayments(c.Context(), userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(payments)
+	return c.JSON(payments)
 }
 
-func (h *PaymentHandler) GetPayment(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+func (h *PaymentHandler) GetPayment(c *fiber.Ctx) error {
+	id := c.Params("id")
 	if id == "" {
-		http.Error(w, "Payment ID is required", http.StatusBadRequest)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Payment ID is required"})
 	}
 
-	payment, err := h.service.GetPaymentByID(r.Context(), id)
+	payment, err := h.service.GetPaymentByID(c.Context(), id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Payment not found"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(payment)
+	return c.JSON(payment)
 }
 

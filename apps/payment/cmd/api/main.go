@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/thapakon-thai/eshop-microservices/payment/internal/handler"
 	"github.com/thapakon-thai/eshop-microservices/payment/internal/infrastructure/db"
 	"github.com/thapakon-thai/eshop-microservices/payment/internal/models"
@@ -15,19 +17,14 @@ import (
 
 func main() {
 	// Configuration
-	dbURL := os.Getenv("SPRING_DATASOURCE_URL") // Keeping original env name for compatibility
+	dbURL := os.Getenv("SPRING_DATASOURCE_URL")
 	if dbURL == "" {
-		// Fallback to components
 		dbHost := os.Getenv("DB_HOST")
 		dbPort := os.Getenv("DB_PORT")
 		dbUser := os.Getenv("DB_USER")
 		dbPass := os.Getenv("DB_PASSWORD")
 		dbName := os.Getenv("PAYMENT_DB_NAME")
 		dbURL = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPass, dbHost, dbPort, dbName)
-	} else {
-		// Convert jdbc:postgresql to postgresql://
-		// jdbc:postgresql://localhost:5432/payment_db -> postgresql://localhost:5432/payment_db
-		// In a real scenario, we might need more complex parsing
 	}
 
 	// Database Initialization
@@ -44,8 +41,17 @@ func main() {
 	svc := service.NewPaymentService(repo)
 	h := handler.NewPaymentHandler(svc)
 
-	// Routing
-	r := handler.Route(h)
+	// Fiber Implementation
+	app := fiber.New(fiber.Config{
+		AppName: "Payment Service (Fiber)",
+	})
+
+	// Middlewares
+	app.Use(logger.New())
+	app.Use(recover.New())
+
+	// Routes
+	handler.RegisterRoutes(app, h)
 
 	// Server setup
 	port := os.Getenv("PAYMENT_SERVICE_PORT")
@@ -53,8 +59,8 @@ func main() {
 		port = "5003"
 	}
 
-	log.Printf("Payment Service starting on port %s", port)
-	if err := http.ListenAndServe(":"+port, r); err != nil {
+	log.Printf("Payment Service (Fiber) starting on port %s", port)
+	if err := app.Listen(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

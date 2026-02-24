@@ -1,10 +1,7 @@
 package handler
 
 import (
-	"encoding/json"
-	"net/http"
-
-	"github.com/go-chi/chi/v5"
+	"github.com/gofiber/fiber/v2"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/models"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/service"
 )
@@ -17,71 +14,59 @@ func NewOrderHandler(svc service.OrderService) *OrderHandler {
 	return &OrderHandler{service: svc}
 }
 
-func Route(handler *OrderHandler) chi.Router {
-	r := chi.NewRouter()
+func RegisterRoutes(app *fiber.App, handler *OrderHandler) {
+	api := app.Group("/api/v1")
 
-	r.Get("/health", HealthCheck)
-	r.Post("/orders", handler.CreateOrder)
-	r.Get("/orders", handler.ListOrders)
-	r.Get("/orders/{id}", handler.GetOrders)
-	return r
+	api.Get("/health", HealthCheck)
+	api.Post("/orders", handler.CreateOrder)
+	api.Get("/orders", handler.ListOrders)
+	api.Get("/orders/:id", handler.GetOrders)
 }
 
-func HealthCheck(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("All good"))
+func HealthCheck(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusOK).SendString("All good")
 }
 
-func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
+func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 	var req models.CreateOrderRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
 	// Extract UserID from header (set by API Gateway)
-	userID := r.Header.Get("x-user-id")
+	userID := c.Get("x-user-id")
 	if userID == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 	req.UserID = userID
 
-	order, err := h.service.CreateOrder(r.Context(), &req)
+	order, err := h.service.CreateOrder(c.Context(), &req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated) // 201 Created
-	json.NewEncoder(w).Encode(order)
+	return c.Status(fiber.StatusCreated).JSON(order)
 }
 
-func (h *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+func (h *OrderHandler) GetOrders(c *fiber.Ctx) error {
+	id := c.Params("id")
 	if id == "" {
-		http.Error(w, "Order ID is required", http.StatusBadRequest)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Order ID is required"})
 	}
 
-	order, err := h.service.GetOrders(r.Context(), id)
+	order, err := h.service.GetOrders(c.Context(), id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(order)
+	return c.JSON(order)
 }
 
-func (h *OrderHandler) ListOrders(w http.ResponseWriter, r *http.Request) {
-	orders, err := h.service.ListOrders(r.Context())
+func (h *OrderHandler) ListOrders(c *fiber.Ctx) error {
+	orders, err := h.service.ListOrders(c.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(orders)
+	return c.JSON(orders)
 }

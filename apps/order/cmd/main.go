@@ -2,11 +2,11 @@ package main
 
 import (
 	"log/slog"
-	"net/http"
 	"os"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/handler"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/infrastructure"
 	"github.com/thapakon-thai/eshop-microservices/order/internal/infrastructure/db"
@@ -16,8 +16,8 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
+	logHandler := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	slog.SetDefault(logHandler)
 
 	port := os.Getenv("ORDER_SERVICE_PORT")
 	if port == "" {
@@ -62,19 +62,21 @@ func main() {
 	svc := service.NewOrderService(repo, grpcClients, publisher)
 	h := handler.NewOrderHandler(svc)
 
-	// Router
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	// Fiber Implementation
+	app := fiber.New(fiber.Config{
+		AppName: "Order Service",
+	})
 
-	r.Mount("/api/v1/", handler.Route(h))
+	// Middlewares
+	app.Use(logger.New())
+	app.Use(recover.New())
+
+	// Routes
+	handler.RegisterRoutes(app, h)
 
 	slog.Info("Starting server at", "port", ":"+port)
-	if err := http.ListenAndServe(":"+port, r); err != nil {
+	if err := app.Listen(":" + port); err != nil {
 		slog.Error("Server failed", "error", err)
 		os.Exit(1)
 	}
-
 }
