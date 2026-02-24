@@ -8,10 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/thapakon-thai/eshop-microservices/inventory/internal/adapter/repository"
 	"github.com/thapakon-thai/eshop-microservices/inventory/internal/handler"
 	"github.com/thapakon-thai/eshop-microservices/inventory/internal/infrastructure/db"
-	"github.com/thapakon-thai/eshop-microservices/inventory/internal/models"
-	"github.com/thapakon-thai/eshop-microservices/inventory/internal/repository"
 	"github.com/thapakon-thai/eshop-microservices/inventory/internal/service"
 	pb "github.com/thapakon-thai/eshop-microservices/proto/inventory"
 	"google.golang.org/grpc"
@@ -40,8 +39,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Auto Migrate
-	if err := gormDB.AutoMigrate(&models.Inventory{}); err != nil {
+	// Auto Migrate (Using DB-specific model instead of Domain)
+	if err := gormDB.AutoMigrate(&repository.InventoryDBModel{}); err != nil {
 		slog.Error("Failed to migrate database", "error", err)
 		os.Exit(1)
 	}

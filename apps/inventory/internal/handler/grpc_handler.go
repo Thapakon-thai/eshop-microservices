@@ -10,10 +10,10 @@ import (
 
 type InventoryGrpcHandler struct {
 	pb.UnimplementedInventoryServiceServer
-	svc *service.InventoryService
+	svc service.InventoryService // Depend on Interface Port, not concrete struct
 }
 
-func NewInventoryGrpcHandler(svc *service.InventoryService) *InventoryGrpcHandler {
+func NewInventoryGrpcHandler(svc service.InventoryService) *InventoryGrpcHandler {
 	return &InventoryGrpcHandler{svc: svc}
 }
 

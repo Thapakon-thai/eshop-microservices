@@ -2,23 +2,31 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/thapakon-thai/eshop-microservices/inventory/internal/models"
-	"github.com/thapakon-thai/eshop-microservices/inventory/internal/repository"
 )
 
-type InventoryService struct {
-	repo repository.InventoryRepository
+type InventoryServiceImpl struct {
+	repo InventoryRepository
 }
 
-func NewInventoryService(repo repository.InventoryRepository) *InventoryService {
-	return &InventoryService{repo: repo}
+func NewInventoryService(repo InventoryRepository) InventoryService {
+	return &InventoryServiceImpl{repo: repo}
 }
 
-func (s *InventoryService) GetStock(ctx context.Context, productID string) (*models.Inventory, error) {
+func (s *InventoryServiceImpl) GetStock(ctx context.Context, productID string) (*models.Inventory, error) {
+	if productID == "" {
+		return nil, fmt.Errorf("invalid product ID")
+	}
 	return s.repo.GetStock(ctx, productID)
 }
 
-func (s *InventoryService) UpdateStock(ctx context.Context, productID string, change int32) (*models.Inventory, error) {
+func (s *InventoryServiceImpl) UpdateStock(ctx context.Context, productID string, change int32) (*models.Inventory, error) {
+	if productID == "" {
+		return nil, fmt.Errorf("invalid product ID")
+	}
+
+	// Repository handles atomic checks on stock dropping below zero.
 	return s.repo.UpdateStock(ctx, productID, change)
 }
