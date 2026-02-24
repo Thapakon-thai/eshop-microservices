@@ -1,7 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { connectRedis } from './config/redis';
-import { CartService } from './services/cartService';
+import client, { connectRedis } from './config/redis';
+import { RedisCartRepository } from './adapters/out/redis/RedisCartRepository';
+import { CartService } from './core/application/services/CartService';
+import { CartController } from './adapters/in/http/CartController';
 
 dotenv.config();
 
@@ -10,102 +12,24 @@ const port = process.env.CART_SERVICE_PORT || 3001;
 
 app.use(express.json({ limit: '50mb' }));
 
-// Helper to get userId from header
-const getUserId = (req: express.Request): string | undefined => {
-    return req.headers['x-user-id'] as string;
-};
+// --- Hexagonal Dependency Injection Bootstrapping ---
+const cartRepository = new RedisCartRepository(client);
+const cartService = new CartService(cartRepository);
+const cartController = new CartController(cartService);
 
 // --- Header-based Routes (Preferred) ---
-
-app.get('/cart', async (req, res) => {
-    const userId = getUserId(req);
-    if (!userId) return res.status(401).json({ error: 'User ID missing in headers' });
-    try {
-        const cart = await CartService.getCart(userId);
-        res.json(cart);
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.post('/cart/item', async (req, res) => {
-    const userId = getUserId(req);
-    if (!userId) return res.status(401).json({ error: 'User ID missing in headers' });
-    try {
-        const cart = await CartService.addItem(userId, req.body);
-        res.json(cart);
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.delete('/cart/item/:productId', async (req, res) => {
-    const userId = getUserId(req);
-    if (!userId) return res.status(401).json({ error: 'User ID missing in headers' });
-    try {
-        const { size, color } = req.query;
-        const cart = await CartService.removeItem(
-            userId, 
-            req.params.productId, 
-            size as string, 
-            color as string
-        );
-        res.json(cart);
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.delete('/cart', async (req, res) => {
-    const userId = getUserId(req);
-    if (!userId) return res.status(401).json({ error: 'User ID missing in headers' });
-    try {
-        await CartService.clearCart(userId);
-        res.status(204).send();
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+app.get('/cart', cartController.getCart);
+app.post('/cart/item', cartController.addItem);
+app.delete('/cart/item/:productId', cartController.removeItemLegacy);
+app.delete('/cart', cartController.clearCartLocal);
 
 // --- Parameter-based Routes (Legacy/Internal) ---
-
-app.get('/cart/:userId', async (req, res) => {
-    try {
-        const cart = await CartService.getCart(req.params.userId);
-        res.json(cart);
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.post('/cart/:userId/item', async (req, res) => {
-    try {
-        const cart = await CartService.addItem(req.params.userId, req.body);
-        res.json(cart);
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.delete('/cart/:userId/item/:productId', async (req, res) => {
-    try {
-        const cart = await CartService.removeItem(req.params.userId, req.params.productId);
-        res.json(cart);
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.delete('/cart/:userId', async (req, res) => {
-    try {
-        await CartService.clearCart(req.params.userId);
-        res.status(204).send();
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+app.get('/cart/:userId', cartController.getCartParam);
+app.post('/cart/:userId/item', cartController.addItemParam);
+app.delete('/cart/:userId/item/:productId', cartController.removeItemParam);
+app.delete('/cart/:userId', cartController.clearCartParam);
 
 app.listen(port, async () => {
     await connectRedis();
-    console.log(`Cart Service running on port ${port}`);
+    console.log(`Cart Service (Hexagonal TS) running on port ${port}`);
 });
